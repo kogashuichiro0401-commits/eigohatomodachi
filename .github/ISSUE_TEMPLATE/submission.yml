@@ -1,0 +1,29 @@
+name: 編集版の投稿
+description: 英語は友達の編集版(アーティファクトのリンク)を投稿します
+title: "[編集版] "
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        この内容は、誰でも見られる形で公開されます。個人情報は書かないでください。
+        アーティファクトの共有は「リンクを知っている人は見られる」にしてから投稿してください。
+  - type: input
+    id: nickname
+    attributes:
+      label: ニックネーム
+    validations:
+      required: true
+  - type: textarea
+    id: point
+    attributes:
+      label: 改善ポイント
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      placeholder: https://claude.ai/artifact/...
+    validations:
+      required: true
