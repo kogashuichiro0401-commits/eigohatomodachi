@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>英語は友達 利用者サイト</title>
+</head>
+<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one reading column; home = four numbered menu rows, then a separate "掲示板とフィードバック" block; each menu opens as its own view */
+:root{
+  --bg:#F4F6F3; --surface:#FFFFFF; --ink:#17212A; --muted:#5B6670; --line:#D8DED9;
+  --accent:#1E5A52; --accent-soft:#E2EDEA; --warn:#8A4A12; --warn-soft:#F6EBDD;
+  --f-head:"Gentium Book Plus","Charis SIL","Noto Serif","Times New Roman",serif;
+  --f-ja:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111618; --surface:#181F22; --ink:#E5EBE8; --muted:#97A29F; --line:#2B3539;
+  --accent:#73B9AC; --accent-soft:#1D3330; --warn:#E3A86B; --warn-soft:#33281C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111618; --surface:#181F22; --ink:#E5EBE8; --muted:#97A29F; --line:#2B3539;
+  --accent:#73B9AC; --accent-soft:#1D3330; --warn:#E3A86B; --warn-soft:#33281C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ja);font-size:15px;line-height:1.75}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:28px 80px}
+header.top{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:22px}
+.brand{font-size:1.35rem;font-weight:700;letter-spacing:.04em;text-decoration:none;color:var(--ink)}
+.brand span{font-weight:500;font-size:.85rem;color:var(--muted);margin-left:8px;letter-spacing:.08em}
+.demo-tag{font-family:var(--f-mono);font-size:.7rem;border:1px solid var(--warn);color:var(--warn);background:var(--warn-soft);border-radius:4px;padding:0 8px;margin-left:auto}
+h1{font-family:var(--f-head);font-size:2rem;line-height:1.25;margin:0 0 8px;text-wrap:balance}
+h2{font-size:1.1rem;margin:0 0 6px}
+h3{font-size:.95rem;margin:0 0 4px}
+p{margin:0 0 12px}
+.lead{color:var(--muted);max-width:62ch}
+.dim{color:var(--muted)}
+a{color:var(--accent)}
+button,.btn{font:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:6px;padding:8px 18px;font-weight:700;font-size:.95rem;text-decoration:none}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:3px 12px;font-size:.82rem}
+.btn[disabled]{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.back{display:inline-block;margin-bottom:14px;font-size:.88rem;color:var(--muted)}
+
+/* home */
+.menu{list-style:none;margin:20px 0 0;padding:0;border-top:1px solid var(--line)}
+.menu a{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.menu a:hover{background:var(--accent-soft)}
+.menu .no{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--surface);display:grid;place-items:center;font-family:var(--f-mono);font-size:.85rem}
+.menu .t{font-weight:700;font-size:1.05rem}
+.menu .d{display:block;color:var(--muted);font-size:.86rem}
+.menu .go{color:var(--accent);font-size:1.2rem}
+.plaza{margin-top:34px}
+.plaza .lab{font-size:.78rem;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:8px}
+.plaza-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.tile{display:block;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 16px;text-decoration:none;color:var(--ink)}
+.tile:hover{border-color:var(--accent)}
+.tile p{margin:0;color:var(--muted);font-size:.86rem}
+
+/* generic blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0 0 14px}
+.notice{border-radius:6px;padding:10px 14px;margin:0 0 14px;font-size:.9rem;background:var(--accent-soft)}
+.notice.warn{background:var(--warn-soft)}
+.notice b{color:var(--warn)}
+.steps{list-style:none;margin:0 0 18px;padding:0;counter-reset:s}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.steps>li:last-child{border-bottom:1px solid var(--line)}
+.steps>li::before{content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-mono);font-size:.8rem;font-weight:500}
+.steps h3{margin:0 0 2px}
+.steps p{margin:0 0 6px;color:var(--muted)}
+.prompt{position:relative;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:10px 70px 10px 12px;font-size:.88rem;margin:6px 0}
+.prompt button{position:absolute;right:8px;top:8px}
+.dl{display:flex;gap:12px 20px;align-items:center;flex-wrap:wrap}
+.dl .meta{min-width:0;flex:1 1 220px}
+.dl .v{font-family:var(--f-head);font-size:1.3rem;font-weight:700}
+.dl .when{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+table.vers{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:10px}
+table.vers th,table.vers td{text-align:left;padding:6px 8px;border-top:1px solid var(--line)}
+table.vers th{font-size:.75rem;color:var(--muted);font-weight:700}
+.vwrap{overflow-x:auto}
+
+/* forms */
+label{display:block;font-weight:700;font-size:.88rem;margin:10px 0 4px}
+input[type=text],input[type=url],textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+textarea{min-height:120px;resize:vertical}
+.err{color:var(--warn);font-size:.86rem;min-height:1.3em;margin:6px 0 0}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+/* lists */
+.sub{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 16px;margin:0 0 12px;display:grid;gap:6px}
+.sub .head{display:flex;gap:6px 14px;align-items:baseline;flex-wrap:wrap}
+.sub .nick{font-weight:700}
+.sub .when{font-family:var(--f-mono);font-size:.76rem;color:var(--muted)}
+.sub .pt{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.sub .act{margin-top:4px}
+
+/* board (2ch style) */
+.threads{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.threads li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 14px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.threads a{font-weight:700;overflow-wrap:anywhere}
+.threads .m{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);white-space:nowrap}
+.tt{font-size:1.2rem;font-weight:700;margin:0 0 12px;overflow-wrap:anywhere}
+.res{border-top:1px solid var(--line);padding:10px 4px;scroll-margin-top:12px}
+.res .rh{font-size:.82rem;color:var(--muted);font-family:var(--f-mono)}
+.res .rh .n{color:var(--accent);font-weight:500}
+.res .rh .nm{color:var(--accent);font-family:var(--f-ja);font-weight:700}
+.res .rb{margin:6px 0 0 1.4em;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
+.res .rb a{color:var(--accent)}
+.res.hit{background:var(--accent-soft)}
+.rules{font-size:.84rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#home" data-nav="home">英語は友達<span>利用者サイト</span></a>
+    <span class="demo-tag" id="demoTag" hidden>見本データ</span>
+  </header>
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ===== 設定: ここだけ書き換えます ===== */
+var CONFIG = {
+  owner: "YOUR_GITHUB_NAME",          // GitHub のユーザー名
+  repo: "YOUR_REPO_NAME",             // リポジトリ名
+  officialUrl: "https://claude.ai/artifact/MbNT15yHh4HMQqDqvuyCta", // 公式版のアーティファクト
+  formspreeId: "YOUR_FORM_ID"         // Formspree のフォームID(例: xyzabcde)
+};
+/* ===================================== */
+
+var $ = function(s, el){ return (el||document).querySelector(s); };
+var view = $("#view");
+var DEMO = CONFIG.owner === "YOUR_GITHUB_NAME" || CONFIG.repo === "YOUR_REPO_NAME";
+var API = "https://api.github.com/repos/" + encodeURIComponent(CONFIG.owner) + "/" + encodeURIComponent(CONFIG.repo);
+var WEB = "https://github.com/" + encodeURIComponent(CONFIG.owner) + "/" + encodeURIComponent(CONFIG.repo);
+var URL_OK = /^https:\/\/claude\.ai\/(?:code\/)?artifact\/[A-Za-z0-9_-]+\/?$/;
+
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+var WD = ["日","月","火","水","木","金","土"];
+function fmtDate(iso, withTime){
+  var d = new Date(iso); if(isNaN(d)) return "";
+  var p = new Intl.DateTimeFormat("ja-JP", {timeZone:"Asia/Tokyo", year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false}).formatToParts(d).reduce(function(a,x){ a[x.type]=x.value; return a; }, {});
+  var wd = WD[new Date(Date.UTC(+p.year, +p.month-1, +p.day)).getUTCDay()];
+  var s = p.year + "/" + p.month + "/" + p.day + "(" + wd + ")";
+  return withTime ? s + " " + p.hour.replace("24","00") + ":" + p.minute + ":" + p.second : s;
+}
+function copyText(t, btn){
+  var done = function(){ var o = btn.textContent; btn.textContent = "コピーしました"; setTimeout(function(){ btn.textContent = o; }, 1500); };
+  try{ navigator.clipboard.writeText(t).then(done, function(){ btn.textContent = "選択してコピー"; }); }catch(e){ btn.textContent = "選択してコピー"; }
+}
+
+/* ---------- GitHub からの読み取り(5分キャッシュ) ---------- */
+async function gh(path){
+  var key = "eitomo:" + path;
+  try{ var c = JSON.parse(sessionStorage.getItem(key)); if(c && Date.now() - c.t < 300000) return c.d; }catch(e){}
+  var r = await fetch(API + path, {headers:{"Accept":"application/vnd.github+json"}});
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  var d = await r.json();
+  try{ sessionStorage.setItem(key, JSON.stringify({t:Date.now(), d:d})); }catch(e){}
+  return d;
+}
+
+/* ---------- 見本データ(設定前や、接続できないとき) ---------- */
+var D_REL = [
+  {name:"英語は友達 v1.2", tag_name:"v1.2", published_at:"2026-10-09T12:00:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:41}]},
+  {name:"英語は友達 v1.1", tag_name:"v1.1", published_at:"2026-09-28T09:30:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:73}]},
+  {name:"英語は友達 v1.0", tag_name:"v1.0", published_at:"2026-09-12T03:00:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:120}]}
+];
+var D_SUB = [
+  {number:3, created_at:"2026-10-09T10:20:00Z", body:"### ニックネーム\n\nみかん\n\n### 改善ポイント\n\n例文を10個に増やして、語源の欄を短くしました。\n\n### URL\n\nhttps://claude.ai/artifact/sample-mikan"},
+  {number:2, created_at:"2026-10-05T01:05:00Z", body:"### ニックネーム\n\nたろう\n\n### 改善ポイント\n\n画面を濃い色にして、文字を大きくしました。\n\n### URL\n\nhttps://claude.ai/artifact/sample-taro"}
+];
+var D_THREADS = [
+  {number:5, title:"【雑談】みんなの英語の勉強法", body:"勉強法を教えてください。\n“英語は友達”はどんな時に使ってますか?", created_at:"2026-10-08T01:00:00Z", updated_at:"2026-10-09T12:30:00Z", comments:2, user:{login:"sample-user1"}},
+  {number:4, title:"例文が多すぎる時の直し方", body:"辞書の例文を5個に戻したいです。", created_at:"2026-10-06T08:00:00Z", updated_at:"2026-10-06T10:00:00Z", comments:1, user:{login:"sample-user2"}}
+];
+var D_COMM = {
+  5:[{id:1, user:{login:"sample-user2"}, created_at:"2026-10-08T03:00:00Z", body:"通学中に、音読モードで使ってます。"},
+     {id:2, user:{login:"sample-user3"}, created_at:"2026-10-09T12:30:00Z", body:">>1 同じです!単語帳もよく使います。"}],
+  4:[{id:3, user:{login:"sample-user1"}, created_at:"2026-10-06T10:00:00Z", body:"プロンプトに「例文は5個」と書けば戻りました。"}]
+};
+
+/* ---------- 画面: ホーム ---------- */
+function vHome(){
+  return '<ul class="menu">' +
+  menuRow("official","1","公式版を利用","いちばん新しい“英語は友達”を、そのまま使います") +
+  menuRow("personalize","2","思い通りにパーソナライズ","公式版を保存して、自分の Claude で作り変えます(利用ガイドつき)") +
+  menuRow("use","3","編集版を利用","みんなが作り変えた“英語は友達”を、使ってみます") +
+  menuRow("post","4","編集版を投稿","作り変えた“英語は友達”を、みんなに紹介します") +
+  '</ul>' +
+  '<section class="plaza"><div class="plaza-grid">' +
+  '<a class="tile" href="#board" data-nav="board"><h2>掲示板</h2><p>利用者どうしで、自由に話します</p></a>' +
+  '<a class="tile" href="#feedback" data-nav="feedback"><h2>管理者へのフィードバック</h2><p>要望や不具合を、管理者に直接送ります</p></a>' +
+  '</div></section>';
+}
+function menuRow(id,no,t,d){ return '<li><a href="#'+id+'" data-nav="'+id+'"><span class="no">'+no+'</span><span><span class="t">'+t+'</span><span class="d">'+d+'</span></span><span class="go" aria-hidden="true">›</span></a></li>'; }
+function back(){ return '<a class="back" href="#home" data-nav="home">‹ メニューにもどる</a>'; }
+
+/* ---------- 1. 公式版 ---------- */
+function vOfficial(){
+  return back() + '<h1>公式版を利用</h1><p class="lead">管理者が公開している、いちばん新しい“英語は友達”です。リンクを開くと、そのまま使えます。</p>' +
+  '<p><a class="btn" href="'+esc(CONFIG.officialUrl)+'" target="_blank" rel="noopener noreferrer">公式の“英語は友達”を開く</a></p>' +
+  '<div class="notice">“英語は友達”は <b>Claude にログインして</b>使います。検索や翻訳のたびに、あなたの Claude の利用枠を使います。</div>';
+}
+
+/* ---------- 2. パーソナライズ ---------- */
+var PROMPTS = [
+  "添付の HTML ファイルを、アーティファクトとして公開して。内容はまず変えないで。",
+  "辞書に出る例文を、5個から10個に増やして。",
+  "画面の文字を大きくして、背景を暗い色にして。"
+];
+function vPersonalize(){
+  var h = back() + '<h1>思い通りにパーソナライズ</h1><p class="lead">公式版のファイルを保存して、自分の Claude に「こう変えて」と頼みます。作り変えたものは、あなただけの“英語は友達”になります。</p>' +
+  '<ol class="steps">' +
+  '<li><div><h3>公式版のファイルを保存する</h3><p>下の枠から、最新版のファイルを保存します。</p><div id="dlbox" class="card"><span class="dim">読み込み中…</span></div></div></li>' +
+  '<li><div><h3>claude.ai を開いて、ファイルを添付する</h3><p>claude.ai の新しい会話に、保存したファイルを添付します。アーティファクトが使えるプランが必要です。</p></div></li>' +
+  '<li><div><h3>Claude に頼む</h3><p>まず、そのままアーティファクトにしてもらうと安心です。そのあと、変えたいことを伝えます。例を使えます。</p>' +
+  PROMPTS.map(function(t,i){ return '<div class="prompt"><span id="pr'+i+'">'+esc(t)+'</span><button class="btn ghost sm" type="button" data-copy="pr'+i+'">コピー</button></div>'; }).join("") +
+  '</div></li>' +
+  '<li><div><h3>共有の設定を変える</h3><p>他の人にも見せたいときは、アーティファクトの共有を「リンクを知っている人は見られる」にします。</p></div></li>' +
+  '<li><div><h3>みんなに紹介する</h3><p>できたら、メニューの「編集版を投稿」から紹介できます。</p><a class="btn ghost sm" href="#post" data-nav="post">編集版を投稿へ</a></div></li>' +
+  '</ol>' +
+  '<div class="notice warn"><b>他の人の版を使うときは、</b>投稿者を信用できるものだけにしてください。中身の安全性は保証できません。</div>';
+  return h;
+}
+async function loadReleases(){
+  if(DEMO) return D_REL;
+  try{ return await gh("/releases?per_page=30"); }catch(e){ markDemo(); return D_REL; }
+}
+function relFile(r){ var a = (r.assets||[]).filter(function(x){ return /\.html?$/i.test(x.name); })[0] || (r.assets||[])[0]; return a; }
+function fillPersonalize(rels){
+  var box = $("#dlbox"); if(!box) return;
+  var list = rels.filter(function(r){ return relFile(r); });
+  if(!list.length){ box.innerHTML = '<span class="dim">公開されている版が、まだありません。</span>'; return; }
+  var l = list[0], f = relFile(l);
+  box.innerHTML = '<div class="dl"><div class="meta"><div class="v">'+esc(l.name || l.tag_name)+'</div><div class="when">公開日 '+esc(fmtDate(l.published_at))+' ・ ダウンロード '+esc(f.download_count||0)+' 回</div></div>' +
+    '<a class="btn" href="'+esc(f.browser_download_url)+'" rel="noopener">最新版を保存する</a></div>' +
+    (list.length > 1 ? '<p style="margin:12px 0 0"><button class="btn ghost sm" type="button" id="oldBtn" aria-expanded="false">過去のバージョンを見る</button></p><div id="oldBox" class="vwrap" hidden><table class="vers"><thead><tr><th>版</th><th>公開日</th><th></th></tr></thead><tbody>' +
+      list.slice(1).map(function(r){ var ff = relFile(r); return '<tr><td>'+esc(r.name||r.tag_name)+'</td><td>'+esc(fmtDate(r.published_at))+'</td><td><a href="'+esc(ff.browser_download_url)+'" rel="noopener">保存</a></td></tr>'; }).join("") +
+      '</tbody></table></div>' : '');
+  var ob = $("#oldBtn");
+  if(ob) ob.addEventListener("click", function(){ var b = $("#oldBox"); b.hidden = !b.hidden; ob.setAttribute("aria-expanded", String(!b.hidden)); ob.textContent = b.hidden ? "過去のバージョンを見る" : "過去のバージョンを閉じる"; });
+}
+
+/* ---------- 3. 編集版を利用 ---------- */
+function vUse(){
+  return back() + '<h1>編集版を利用</h1><p class="lead">みんなが作り変えた“英語は友達”です。「開く」を押すと、その人の“英語は友達”が開きます。</p>' +
+  '<div class="notice warn"><b>投稿は自動で載ります。</b>中身の安全性は保証できません。信用できるものだけ使ってください。</div><div id="sublist"><span class="dim">読み込み中…</span></div>';
+}
+function parseForm(body){
+  var out = {}, re = /###\s+(.+?)\s*\n+([\s\S]*?)(?=\n###\s|$)/g, m;
+  while((m = re.exec(String(body||"").replace(/\r/g,"")))) out[m[1].trim()] = m[2].trim();
+  return out;
+}
+async function loadSubs(){
+  if(DEMO) return D_SUB;
+  try{ return await gh("/issues?labels=submission&state=open&per_page=50"); }catch(e){ markDemo(); return D_SUB; }
+}
+function fillSubs(list){
+  var box = $("#sublist"); if(!box) return;
+  var items = list.map(function(i){ var f = parseForm(i.body); return {n:i.number, at:i.created_at, nick:f["ニックネーム"], pt:f["改善ポイント"], url:f["URL"]}; })
+    .filter(function(x){ return x.nick && x.url && URL_OK.test(x.url); });
+  if(!items.length){ box.innerHTML = '<div class="card dim">まだ投稿がありません。最初の1人になりませんか?</div>'; return; }
+  box.innerHTML = items.map(function(x){
+    return '<article class="sub"><div class="head"><span class="nick">'+esc(x.nick)+'</span><span class="when">投稿日 '+esc(fmtDate(x.at))+'</span></div>' +
+      '<p class="pt">'+esc(x.pt||"")+'</p><div class="act"><a class="btn sm" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">開く</a></div></article>';
+  }).join("");
+}
+
+/* ---------- 4. 編集版を投稿 ---------- */
+function vPost(){
+  return back() + '<h1>編集版を投稿</h1><p class="lead">作り変えた“英語は友達”を、みんなに紹介します。紹介の送信には、GitHub のアカウントが必要です。</p>' +
+  '<ol class="steps">' +
+  '<li><div><h3>GitHub のアカウントを用意する</h3><p>無料です。メールアドレスだけで作れます。持っている人は、次に進みます。</p>' +
+  '<p><a class="btn ghost sm" href="https://github.com/signup" target="_blank" rel="noopener noreferrer">アカウントを作る</a> <a class="btn ghost sm" href="https://github.com/login" target="_blank" rel="noopener noreferrer">ログインする</a></p>' +
+  '<p class="dim" style="font-size:.84rem">作成の流れ: メールアドレス → パスワード → ユーザー名 → 届いた確認コードを入力。ログインしたまま、次に進みます。</p></div></li>' +
+  '<li><div><h3>アーティファクトの共有を確認する</h3><p>作り変えた“英語は友達”の共有を、「リンクを知っている人は見られる」にします。変えないと、他の人が開けません。</p></div></li>' +
+  '<li><div><h3>内容を入れる</h3>' +
+  '<form id="postForm" novalidate>' +
+  '<label for="pNick">ニックネーム</label><input id="pNick" type="text" maxlength="30" autocomplete="off">' +
+  '<label for="pPoint">改善ポイント</label><textarea id="pPoint" maxlength="600" placeholder="どこをどう変えましたか?"></textarea>' +
+  '<label for="pUrl">アーティファクトの URL</label><input id="pUrl" type="url" placeholder="https://claude.ai/artifact/..." autocomplete="off">' +
+  '<p class="err" id="pErr" role="alert"></p>' +
+  '<p class="dim" style="font-size:.84rem">投稿した内容は、誰でも見られる形で公開されます。個人情報は書かないでください。</p>' +
+  '<button class="btn" type="submit">GitHub の送信画面を開く</button></form></div></li>' +
+  '<li><div><h3>GitHub で「送信」を押す</h3><p>入力済みの画面が開きます。内容を確かめて、送信を押すと完了です。しばらくすると、「編集版を利用」の一覧に載ります。</p></div></li>' +
+  '</ol>';
+}
+function bindPost(){
+  var f = $("#postForm"); if(!f) return;
+  f.addEventListener("submit", function(e){
+    e.preventDefault();
+    var nick = $("#pNick").value.trim(), pt = $("#pPoint").value.trim(), url = $("#pUrl").value.trim(), err = $("#pErr");
+    if(!nick){ err.textContent = "ニックネームを入れてください。"; return; }
+    if(!pt){ err.textContent = "改善ポイントを入れてください。"; return; }
+    if(!URL_OK.test(url)){ err.textContent = "URL は https://claude.ai/artifact/… の形で入れてください。"; return; }
+    err.textContent = "";
+    if(DEMO){ err.textContent = "見本表示のため、GitHub は開きません。設定後に開くようになります。"; return; }
+    var q = "template=submission.yml&title=" + encodeURIComponent("[編集版] " + nick) + "&nickname=" + encodeURIComponent(nick) + "&point=" + encodeURIComponent(pt) + "&url=" + encodeURIComponent(url);
+    window.open(WEB + "/issues/new?" + q, "_blank", "noopener");
+  });
+}
+
+/* ---------- 掲示板(2ちゃんねる風) ---------- */
+function vBoard(){
+  return back() + '<h1>掲示板</h1><p class="lead">利用者どうしで、自由に話す場所です。スレッドの一覧から、読みたい話題を選びます。</p>' +
+  '<div class="notice">書き込みには GitHub のアカウントが必要です(読むだけなら不要)。名前の欄には GitHub のユーザー名が出ます。</div>' +
+  '<p><button class="btn" type="button" id="newTh">新しいスレッドを立てる</button></p>' +
+  '<form id="thForm" class="card" hidden novalidate><label for="tTitle">スレッドのタイトル</label><input id="tTitle" type="text" maxlength="60"><label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea><p class="err" id="tErr" role="alert"></p><button class="btn" type="submit">GitHub の送信画面を開く</button></form>' +
+  '<div id="thlist"><span class="dim">読み込み中…</span></div>' +
+  '<p class="rules">ルール: 他の人への中傷、個人情報、宣伝や迷惑な書き込みは、管理者が削除することがあります。</p>';
+}
+async function loadThreads(){
+  if(DEMO) return D_THREADS;
+  try{ return await gh("/issues?labels=board&state=open&sort=updated&direction=desc&per_page=50"); }catch(e){ markDemo(); return D_THREADS; }
+}
+function fillThreads(list){
+  var box = $("#thlist"); if(!box) return;
+  if(!list.length){ box.innerHTML = '<div class="card dim">まだスレッドがありません。</div>'; return; }
+  box.innerHTML = '<ul class="threads">' + list.map(function(t, i){
+    return '<li><a href="#board-'+t.number+'" data-nav="board-'+t.number+'">'+(i+1)+': '+esc(t.title)+' ('+((t.comments||0)+1)+')</a><span class="m">'+esc(fmtDate(t.updated_at, true))+'</span></li>';
+  }).join("") + '</ul>';
+}
+function bindBoard(){
+  var nb = $("#newTh"), f = $("#thForm");
+  if(nb) nb.addEventListener("click", function(){ f.hidden = !f.hidden; });
+  if(f) f.addEventListener("submit", function(e){
+    e.preventDefault();
+    var t = $("#tTitle").value.trim(), b = $("#tBody").value.trim(), err = $("#tErr");
+    if(!t || !b){ err.textContent = "タイトルと最初の書き込みを入れてください。"; return; }
+    err.textContent = "";
+    if(DEMO){ err.textContent = "見本表示のため、GitHub は開きません。"; return; }
+    window.open(WEB + "/issues/new?template=board.yml&title=" + encodeURIComponent(t) + "&message=" + encodeURIComponent(b), "_blank", "noopener");
+  });
+}
+function resBody(text){
+  return esc(text).replace(/&gt;&gt;(\d{1,4})/g, '<a href="#" data-res="$1">&gt;&gt;$1</a>');
+}
+function vThread(n){
+  return '<a class="back" href="#board" data-nav="board">‹ スレッド一覧にもどる</a><div id="thread"><span class="dim">読み込み中…</span></div>';
+}
+async function loadThread(n){
+  if(DEMO){
+    var t = D_THREADS.filter(function(x){ return x.number === n; })[0];
+    if(!t) return null;
+    return {issue:t, comments:D_COMM[n] || []};
+  }
+  try{
+    var is = await gh("/issues/" + n);
+    if(!is.labels || !is.labels.some(function(l){ return l.name === "board"; })) return null;
+    var cs = is.comments ? await gh("/issues/" + n + "/comments?per_page=100") : [];
+    return {issue:is, comments:cs};
+  }catch(e){ return "err"; }
+}
+function fillThread(d, n){
+  var box = $("#thread"); if(!box) return;
+  if(d === "err"){ box.innerHTML = '<div class="card dim">読み込めませんでした。少し時間をおいて、もう一度開いてください。</div>'; return; }
+  if(!d){ box.innerHTML = '<div class="card dim">このスレッドは見つかりません。</div>'; return; }
+  var all = [{user:d.issue.user, created_at:d.issue.created_at, body:d.issue.body}].concat(d.comments);
+  function id(u){ var s = u && u.login || "?"; var h = 0; for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return h.toString(36).slice(-6); }
+  var html = '<h2 class="tt">'+esc(d.issue.title)+'</h2>';
+  all.forEach(function(r, i){
+    var raw = String(r.body || "");
+    var m = i === 0 ? parseForm(raw) : null;
+    var text = (m && m["本文"]) ? m["本文"] : raw;
+    html += '<div class="res" id="res-'+(i+1)+'"><div class="rh"><span class="n">'+(i+1)+'</span> 名前: <span class="nm">'+esc(r.user && r.user.login || "名無しさん")+'</span> : '+esc(fmtDate(r.created_at, true))+' ID:'+esc(id(r.user))+'</div><div class="rb">'+resBody(text)+'</div></div>';
+  });
+  var link = DEMO ? "" : WEB + "/issues/" + n;
+  html += '<p style="margin-top:16px">' + (link ? '<a class="btn" href="'+esc(link)+'#issue-comment-box" target="_blank" rel="noopener noreferrer">GitHub で返信を書く</a>' : '<span class="dim">(見本表示のため、返信ボタンは設定後に出ます)</span>') + '</p>' +
+    '<p class="dim" style="font-size:.84rem">返信は GitHub の画面で書きます(GitHub のアカウントが必要です)。書いたあと、このページを開き直すと反映されます。</p>';
+  box.innerHTML = html;
+}
+
+/* ---------- フィードバック ---------- */
+function vFeedback(){
+  return back() + '<h1>管理者へのフィードバック</h1><p class="lead">要望、不具合、感想を、管理者に直接送ります。他の人には見えません。</p>' +
+  '<form id="fbForm" class="card" novalidate>' +
+  '<label for="fNick">ニックネーム</label><input id="fNick" type="text" maxlength="30" autocomplete="off">' +
+  '<label for="fMsg">内容</label><textarea id="fMsg" maxlength="2000"></textarea>' +
+  '<div class="hp" aria-hidden="true"><label for="fHp">ここは空のままにしてください</label><input id="fHp" type="text" tabindex="-1" autocomplete="off"></div>' +
+  '<p class="dim" style="font-size:.84rem">日時は自動で付きます。個人情報は書かないでください。</p>' +
+  '<p class="err" id="fErr" role="alert"></p>' +
+  '<button class="btn" type="submit" id="fBtn">送信する</button></form>';
+}
+function bindFeedback(){
+  var f = $("#fbForm"); if(!f) return;
+  f.addEventListener("submit", async function(e){
+    e.preventDefault();
+    var nick = $("#fNick").value.trim(), msg = $("#fMsg").value.trim(), err = $("#fErr"), btn = $("#fBtn");
+    if($("#fHp").value) return;
+    if(!nick || !msg){ err.textContent = "ニックネームと内容を入れてください。"; return; }
+    err.textContent = "";
+    if(CONFIG.formspreeId === "YOUR_FORM_ID"){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
+    btn.disabled = true;
+    try{
+      var r = await fetch("https://formspree.io/f/" + encodeURIComponent(CONFIG.formspreeId), {
+        method:"POST", headers:{"Accept":"application/json","Content-Type":"application/json"},
+        body: JSON.stringify({"日時": fmtDate(new Date().toISOString(), true), "ニックネーム": nick, "内容": msg})
+      });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      f.innerHTML = '<p><b>送信しました。</b>ありがとうございます。</p><p><a href="#home" data-nav="home">メニューにもどる</a></p>';
+    }catch(ex){
+      btn.disabled = false;
+      err.textContent = "送信できませんでした。少し時間をおいて、もう一度お試しください。";
+    }
+  });
+}
+
+/* ---------- ルーティング ---------- */
+function markDemo(){ DEMO = true; $("#demoTag").hidden = false; }
+async function route(){
+  var h = (location.hash || "#home").slice(1) || "home";
+  var m = /^board-(\d{1,6})$/.exec(h);
+  if(DEMO) $("#demoTag").hidden = false;
+  if(m){ view.innerHTML = vThread(+m[1]); window.scrollTo(0,0); fillThread(await loadThread(+m[1]), +m[1]); return; }
+  switch(h){
+    case "official": view.innerHTML = vOfficial(); break;
+    case "personalize": view.innerHTML = vPersonalize(); window.scrollTo(0,0); fillPersonalize(await loadReleases()); return;
+    case "use": view.innerHTML = vUse(); window.scrollTo(0,0); fillSubs(await loadSubs()); return;
+    case "post": view.innerHTML = vPost(); bindPost(); break;
+    case "board": view.innerHTML = vBoard(); bindBoard(); window.scrollTo(0,0); fillThreads(await loadThreads()); return;
+    case "feedback": view.innerHTML = vFeedback(); bindFeedback(); break;
+    default: view.innerHTML = vHome();
+  }
+  window.scrollTo(0,0);
+}
+document.addEventListener("click", function(e){
+  var c = e.target.closest("[data-copy]");
+  if(c){ var el = document.getElementById(c.getAttribute("data-copy")); if(el) copyText(el.textContent, c); return; }
+  var r = e.target.closest("[data-res]");
+  if(r){ e.preventDefault(); var t = document.getElementById("res-" + r.getAttribute("data-res")); if(t){ t.scrollIntoView({block:"center"}); t.classList.add("hit"); setTimeout(function(){ t.classList.remove("hit"); }, 1600); } return; }
+  var a = e.target.closest("[data-nav]");
+  if(a){ e.preventDefault(); var to = a.getAttribute("data-nav"); if(location.hash === "#" + to) route(); else location.hash = to; }
+});
+window.addEventListener("hashchange", route);
+route();
+})();
+</script>
+
+</body>
+</html>
