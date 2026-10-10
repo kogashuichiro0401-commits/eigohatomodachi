@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* layout: one reading column; home = four numbered menu rows, then a separate "掲示板とフィードバック" block; each menu opens as its own view */
+/* layout: one reading column; home = "初めての方はこちら" banner, three numbered menu rows, then board/feedback tiles; each menu opens as its own view */
 :root{
   --bg:#F4F6F3; --surface:#FFFFFF; --ink:#17212A; --muted:#5B6670; --line:#D8DED9;
   --accent:#1E5A52; --accent-soft:#E2EDEA; --warn:#8A4A12; --warn-soft:#F6EBDD;
@@ -61,6 +61,38 @@ button,.btn{font:inherit;cursor:pointer}
 .tile{display:block;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:14px 16px;text-decoration:none;color:var(--ink)}
 .tile:hover{border-color:var(--accent)}
 .tile p{margin:0;color:var(--muted);font-size:.86rem}
+.first{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--accent);color:var(--surface);border-radius:10px;padding:16px 20px;text-decoration:none;margin-bottom:6px}
+.first:hover{filter:brightness(1.08)}
+.first-t{display:block;font-weight:700;font-size:1.12rem;letter-spacing:.02em}
+.first-d{display:block;font-size:.86rem;opacity:.88;margin-top:2px}
+.first .go{font-size:1.5rem;line-height:1}
+
+/* intro */
+.hero{padding:6px 0 30px;border-bottom:1px solid var(--line)}
+.kicker{font-size:.8rem;letter-spacing:.12em;color:var(--accent);font-weight:700;margin:0 0 8px}
+.hero h1{font-family:var(--f-ja);font-size:clamp(1.6rem,5.2vw,2.3rem);line-height:1.35;font-weight:700;margin:0 0 14px}
+.hero .lead{font-size:1rem;color:var(--ink)}
+.hero .lead b{background:linear-gradient(transparent 62%,var(--accent-soft) 62%)}
+.cta{margin:18px 0 0}
+.isec{padding:34px 0 30px;border-bottom:1px solid var(--line)}
+.isec:last-child{border-bottom:0}
+.ilab{font-size:.78rem;letter-spacing:.12em;color:var(--muted);font-weight:700;margin:0 0 4px}
+.ih{font-size:1.35rem;line-height:1.4;margin:0 0 12px}
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 16px;display:grid;gap:10px;margin-top:16px}
+.chat .cl{font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.08em;margin:0}
+.chat .b{max-width:min(86%,520px);padding:9px 14px;border-radius:14px;font-size:.92rem;line-height:1.65}
+.chat .me{justify-self:end;background:var(--accent);color:var(--surface);border-bottom-right-radius:4px}
+.chat .ai{justify-self:start;background:var(--accent-soft);color:var(--ink);border-bottom-left-radius:4px}
+.chips{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chips li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:.84rem}
+.pts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:22px}
+.pts h3{color:var(--accent);margin-bottom:2px}
+.pts p{margin:0;font-size:.88rem;color:var(--muted)}
+.shot{margin:0 0 22px}
+.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:0 6px 22px rgba(23,33,42,.08)}
+.shot.wide img{width:min(1120px,calc(100vw - 32px));max-width:none;position:relative;left:50%;transform:translateX(-50%)}
+.shot figcaption{font-size:.9rem;color:var(--muted);margin-top:10px}
+.shot figcaption b{display:block;color:var(--ink);font-size:1rem;margin-bottom:2px}
 
 /* generic blocks */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin:0 0 14px}
@@ -130,7 +162,7 @@ textarea{min-height:120px;resize:vertical}
 var CONFIG = {
   owner: "kogashuichiro0401-commits",          // GitHub のユーザー名
   repo: "eigohatomodachi",             // リポジトリ名
-  officialUrl: "https://claude.ai/artifact/MbNT15yHh4HMQqDqvuyCta", // 公式版のアーティファクト
+  officialUrl: "https://claude.ai/artifact/MbNT15yHh4HMQqDqvuyCta", // 公式版のアーティファクト(いまの画面では使っていません)
   formspreeId: "xyekjzko"         // Formspree のフォームID(例: xyzabcde)
 };
 /* ===================================== */
@@ -189,11 +221,11 @@ var D_COMM = {
 
 /* ---------- 画面: ホーム ---------- */
 function vHome(){
-  return '<ul class="menu">' +
-  menuRow("official","1","公式版を利用","いちばん新しい“英語は友達”を、そのまま使います") +
-  menuRow("personalize","2","思い通りにパーソナライズ","公式版を保存して、自分の Claude で作り変えます(利用ガイドつき)") +
-  menuRow("use","3","編集版を利用","みんなが作り変えた“英語は友達”を、使ってみます") +
-  menuRow("post","4","編集版を投稿","作り変えた“英語は友達”を、みんなに紹介します") +
+  return '<a class="first" href="#intro" data-nav="intro"><span><span class="first-t">初めての方はこちら</span><span class="first-d">“英語は友達”でできることと、Claude と話して自分専用に作り変える方法を紹介します</span></span><span class="go" aria-hidden="true">›</span></a>' +
+  '<ul class="menu">' +
+  menuRow("start","1","“英語は友達”を利用する","公式版を保存して、自分の Claude で使います。話しかけるだけで、自分専用に作り変えられます") +
+  menuRow("use","2","編集版“英語は友達”を利用する","みんなが作り変えた“英語は友達”を、使ってみます") +
+  menuRow("post","3","編集版“英語は友達”を投稿","作り変えた“英語は友達”を、みんなに紹介します") +
   '</ul>' +
   '<section class="plaza"><div class="plaza-grid">' +
   '<a class="tile" href="#board" data-nav="board"><h2>掲示板</h2><p>利用者どうしで、自由に話します</p></a>' +
@@ -203,36 +235,55 @@ function vHome(){
 function menuRow(id,no,t,d){ return '<li><a href="#'+id+'" data-nav="'+id+'"><span class="no">'+no+'</span><span><span class="t">'+t+'</span><span class="d">'+d+'</span></span><span class="go" aria-hidden="true">›</span></a></li>'; }
 function back(){ return '<a class="back" href="#home" data-nav="home">‹ メニューにもどる</a>'; }
 
-/* ---------- 1. 公式版 ---------- */
-function vOfficial(){
-  return back() + '<h1>公式版を利用</h1><p class="lead">管理者が公開している、いちばん新しい“英語は友達”です。リンクを開くと、そのまま使えます。</p>' +
-  '<p><a class="btn" href="'+esc(CONFIG.officialUrl)+'" target="_blank" rel="noopener noreferrer">公式の“英語は友達”を開く</a></p>' +
-  '<div class="notice">“英語は友達”は <b>Claude にログインして</b>使います。検索や翻訳のたびに、あなたの Claude の利用枠を使います。</div>';
+/* ---------- はじめての方へ(紹介) ---------- */
+var IDEAS = ["例文を10個に増やす","語源の説明を短くする","文字を大きく、背景を暗くする","志望校や資格に合わせた例文にする","よく使う機能だけを残す","単語帳に覚えた印を付けられるようにする"];
+function vIntro(){
+  return back() +
+  '<section class="hero"><p class="kicker">はじめての方へ</p>' +
+  '<h1>話しかけるだけで、<br>自分専用の英語アプリに。</h1>' +
+  '<p class="lead">“英語は友達”は、Claude の中で動く英語学習アプリです。辞書・翻訳・長文読解・音読が、ひとつにまとまっています。そして何よりの特長は、<b>Claude と話しながら、あなた好みに作り変えられること</b>です。</p>' +
+  '<p class="cta"><a class="btn" href="#start" data-nav="start">“英語は友達”を利用する</a></p></section>' +
+
+  '<section class="isec"><p class="ilab">いちばんの特長</p><h2 class="ih">作り変えは、頼むだけ。</h2>' +
+  '<p>使っていて「ここがこうだったらいいのに」と思ったら、Claude にそのまま伝えます。プログラムを書く必要はありません。Claude が“英語は友達”を直して、新しい版にしてくれます。</p>' +
+  '<div class="chat" role="img" aria-label="会話の例: 例文を10個に増やしてと頼むと、Claude が直してくれる">' +
+  '<p class="cl">会話の例</p>' +
+  '<div class="b me">辞書の例文、5個だと少ないな。10個に増やして。</div>' +
+  '<div class="b ai">例文を10個に増やしました。新しい版を公開したので、開き直して確かめてみてください。</div>' +
+  '<div class="b me">いいね。あと、夜に使うから画面を暗い色にして。</div>' +
+  '<div class="b ai">背景を暗い色に、文字を明るい色に変えました。</div></div>' +
+  '<p class="dim" style="font-size:.88rem;margin-top:14px">たとえば、こんな作り変えができます</p>' +
+  '<ul class="chips">' + IDEAS.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join("") + '</ul>' +
+  '<div class="pts">' +
+  '<div><h3>ふだんの言葉で</h3><p>専門の知識はいりません。友達に頼むように話せば大丈夫です。</p></div>' +
+  '<div><h3>何度でも</h3><p>少しずつ直して、育てていけます。気に入らなければ「元に戻して」と頼めます。</p></div>' +
+  '<div><h3>みんなに紹介</h3><p>できあがった“英語は友達”は、このサイトで紹介できます。他の人の工夫も使えます。</p></div>' +
+  '</div></section>' +
+
+  '<section class="isec"><p class="ilab">できること</p><h2 class="ih">はじめから、これだけ使えます。</h2>' +
+  '<figure class="shot wide"><img src="img/reading.jpg" width="1400" height="743" loading="lazy" alt="長文学習の画面。左に英文、右にクリックした語の辞書と、Claude への質問欄が並ぶ"><figcaption><b>長文学習</b>英文を貼り付けて、「読む」「和訳と比較」「音読」の3段階で学びます。わからない語をクリックすると横に辞書が出て、そのまま単語帳に追加できます。下の欄から、Claude に質問もできます。</figcaption></figure>' +
+  '<figure class="shot"><img src="img/dictionary.jpg" width="1020" height="660" loading="lazy" alt="辞書の画面。見出し語 fleet に、どんな文章で使われるか、語源、覚え方が並ぶ"><figcaption><b>辞書</b>意味と例文だけでなく、どんな文章で使われるか、語源、覚え方まで出ます。単語が「つながり」で覚えられます。</figcaption></figure>' +
+  '<div class="card"><b>翻訳と質問</b><p class="dim" style="margin:4px 0 0">英文を入れると翻訳、英語についての質問を入れると Claude が答えます。入力に合わせて、自動で切り替わります。</p></div>' +
+  '</section>' +
+
+  '<section class="isec"><p class="ilab">はじめ方</p><h2 class="ih">ファイルを渡して、頼むだけ。</h2>' +
+  '<p>公式版のファイルを保存して、claude.ai の会話に添付し、ひとこと頼むと使えるようになります。手順は「“英語は友達”を利用する」で案内しています。</p>' +
+  '<div class="notice">“英語は友達”は <b>Claude にログインして</b>使います。検索や翻訳のたびに、あなたの Claude の利用枠を使います。</div>' +
+  '<p class="cta"><a class="btn" href="#start" data-nav="start">“英語は友達”を利用する</a></p></section>';
 }
 
-/* ---------- 2. パーソナライズ ---------- */
-var PROMPTS = [
-  "添付の HTML ファイルを、アーティファクトとして公開して。内容はまず変えないで。このページは Claude を呼び出すので、公開するときに capabilities で sample を宣言して({sample:{}})。",
-  "辞書に出る例文を、5個から10個に増やして。",
-  "画面の文字を大きくして、背景を暗い色にして。"
-];
-var FIX_PROMPT = "このアーティファクトに capabilities の sample を宣言して({sample:{}})、公開し直して。内容は変えないで。";
-function vPersonalize(){
-  var h = back() + '<h1>思い通りにパーソナライズ</h1><p class="lead">公式版のファイルを保存して、自分の Claude に「こう変えて」と頼みます。作り変えたものは、あなただけの“英語は友達”になります。</p>' +
+/* ---------- 1. “英語は友達”を利用する ---------- */
+var START_PROMPT = "添付の HTML ファイルを、アーティファクトとして公開して。内容はまず変えないで。";
+function vStart(){
+  return back() + '<h1>“英語は友達”を利用する</h1><p class="lead">公式版のファイルを保存して、自分の Claude で開きます。あなたの Claude の中に、あなた専用の“英語は友達”ができあがります。</p>' +
   '<ol class="steps">' +
   '<li><div><h3>公式版のファイルを保存する</h3><p>下の枠から、最新版のファイルを保存します。</p><div id="dlbox" class="card"><span class="dim">読み込み中…</span></div></div></li>' +
-  '<li><div><h3>claude.ai を開いて、ファイルを添付する</h3><p>claude.ai の新しい会話に、保存したファイルを添付します。アーティファクトが使えるプランが必要です。</p></div></li>' +
-  '<li><div><h3>Claude に頼む</h3><p>まず、そのままアーティファクトにしてもらうと安心です。そのあと、変えたいことを伝えます。例を使えます。</p>' +
-  PROMPTS.map(function(t,i){ return '<div class="prompt"><span id="pr'+i+'">'+esc(t)+'</span><button class="btn ghost sm" type="button" data-copy="pr'+i+'">コピー</button></div>'; }).join("") +
-  '<div class="notice warn" style="margin-top:10px"><b>「検索できません」「原因コード: null」と出たら、</b>Claude を呼び出す機能が付かずに公開されています。同じ会話で、次のように頼んでください。' +
-  '<div class="prompt"><span id="prFix">'+esc(FIX_PROMPT)+'</span><button class="btn ghost sm" type="button" data-copy="prFix">コピー</button></div>' +
-  '公開し直したら、claude.ai 上でアーティファクトを開き、Claude の利用を確認する表示が出たら許可します。</div>' +
+  '<li><div><h3>claude.ai を開いて、ファイルを添付する</h3><p>claude.ai の新しい会話に、保存したファイルを添付します。</p></div></li>' +
+  '<li><div><h3>Claude に頼む</h3><p>次の文をコピーして、ファイルと一緒に送ります。</p>' +
+  '<div class="prompt"><span id="prStart">'+esc(START_PROMPT)+'</span><button class="btn ghost sm" type="button" data-copy="prStart">コピー</button></div>' +
   '</div></li>' +
-  '<li><div><h3>共有の設定を変える</h3><p>他の人にも見せたいときは、アーティファクトの共有を「リンクを知っている人は見られる」にします。</p></div></li>' +
-  '<li><div><h3>みんなに紹介する</h3><p>できたら、メニューの「編集版を投稿」から紹介できます。</p><a class="btn ghost sm" href="#post" data-nav="post">編集版を投稿へ</a></div></li>' +
   '</ol>' +
-  '<div class="notice warn"><b>他の人の版を使うときは、</b>投稿者を信用できるものだけにしてください。中身の安全性は保証できません。</div>';
-  return h;
+  '<div class="notice">できあがったら、あとは同じ会話で Claude に「こう変えて」と話しかけるだけです。少しずつ、あなた専用の“英語は友達”に育てていけます。</div>';
 }
 async function loadReleases(){
   if(DEMO) return D_REL;
@@ -253,9 +304,9 @@ function fillPersonalize(rels){
   if(ob) ob.addEventListener("click", function(){ var b = $("#oldBox"); b.hidden = !b.hidden; ob.setAttribute("aria-expanded", String(!b.hidden)); ob.textContent = b.hidden ? "過去のバージョンを見る" : "過去のバージョンを閉じる"; });
 }
 
-/* ---------- 3. 編集版を利用 ---------- */
+/* ---------- 2. 編集版“英語は友達”を利用する ---------- */
 function vUse(){
-  return back() + '<h1>編集版を利用</h1><p class="lead">みんなが作り変えた“英語は友達”です。「開く」を押すと、その人の“英語は友達”が開きます。</p>' +
+  return back() + '<h1>編集版“英語は友達”を利用する</h1><p class="lead">みんなが作り変えた“英語は友達”です。「開く」を押すと、その人の“英語は友達”が開きます。</p>' +
   '<div class="notice warn"><b>投稿は自動で載ります。</b>中身の安全性は保証できません。信用できるものだけ使ってください。</div><div id="sublist"><span class="dim">読み込み中…</span></div>';
 }
 function parseForm(body){
@@ -278,9 +329,9 @@ function fillSubs(list){
   }).join("");
 }
 
-/* ---------- 4. 編集版を投稿 ---------- */
+/* ---------- 3. 編集版“英語は友達”を投稿 ---------- */
 function vPost(){
-  return back() + '<h1>編集版を投稿</h1><p class="lead">作り変えた“英語は友達”を、みんなに紹介します。紹介の送信には、GitHub のアカウントが必要です。</p>' +
+  return back() + '<h1>編集版“英語は友達”を投稿</h1><p class="lead">作り変えた“英語は友達”を、みんなに紹介します。紹介の送信には、GitHub のアカウントが必要です。</p>' +
   '<ol class="steps">' +
   '<li><div><h3>GitHub のアカウントを用意する</h3><p>無料です。メールアドレスだけで作れます。持っている人は、次に進みます。</p>' +
   '<p><a class="btn ghost sm" href="https://github.com/signup" target="_blank" rel="noopener noreferrer">アカウントを作る</a> <a class="btn ghost sm" href="https://github.com/login" target="_blank" rel="noopener noreferrer">ログインする</a></p>' +
@@ -294,7 +345,7 @@ function vPost(){
   '<p class="err" id="pErr" role="alert"></p>' +
   '<p class="dim" style="font-size:.84rem">投稿した内容は、誰でも見られる形で公開されます。個人情報は書かないでください。</p>' +
   '<button class="btn" type="submit">GitHub の送信画面を開く</button></form></div></li>' +
-  '<li><div><h3>GitHub で「送信」を押す</h3><p>入力済みの画面が開きます。内容を確かめて、送信を押すと完了です。しばらくすると、「編集版を利用」の一覧に載ります。</p></div></li>' +
+  '<li><div><h3>GitHub で「送信」を押す</h3><p>入力済みの画面が開きます。内容を確かめて、送信を押すと完了です。しばらくすると、「編集版“英語は友達”を利用する」の一覧に載ります。</p></div></li>' +
   '</ol>';
 }
 function bindPost(){
@@ -425,8 +476,9 @@ async function route(){
   if(DEMO) $("#demoTag").hidden = false;
   if(m){ view.innerHTML = vThread(+m[1]); window.scrollTo(0,0); fillThread(await loadThread(+m[1]), +m[1]); return; }
   switch(h){
-    case "official": view.innerHTML = vOfficial(); break;
-    case "personalize": view.innerHTML = vPersonalize(); window.scrollTo(0,0); fillPersonalize(await loadReleases()); return;
+    case "intro": view.innerHTML = vIntro(); break;
+    case "start": case "personalize": case "official":
+      view.innerHTML = vStart(); window.scrollTo(0,0); fillPersonalize(await loadReleases()); return;
     case "use": view.innerHTML = vUse(); window.scrollTo(0,0); fillSubs(await loadSubs()); return;
     case "post": view.innerHTML = vPost(); bindPost(); break;
     case "board": view.innerHTML = vBoard(); bindBoard(); window.scrollTo(0,0); fillThreads(await loadThreads()); return;
