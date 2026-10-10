@@ -23,7 +23,8 @@
 
 ## 3. サイトに URL を入れる
 
-`index.html` の CONFIG の `gasUrl` に、コピーした URL を入れます。
+利用者サイトの本体、つまり GitHub リポジトリ `eigohatomodachi` のいちばん上にある `index.html` を開きます(“英語は友達”本体の HTML ではありません)。
+鉛筆アイコンで編集し、170行目あたりの CONFIG の `gasUrl` に、コピーした URL を入れて保存(Commit)します。
 
 ```js
 gasUrl: "https://script.google.com/macros/s/…/exec"
