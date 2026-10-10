@@ -16,7 +16,7 @@ var SHEETS = {
   thread: { name: "スレッド", head: ["スレッドID", "作成日時", "更新日時", "タイトル", "レス数", "非表示"] },
   post:   { name: "書き込み", head: ["スレッドID", "番号", "日時", "名前", "ID", "本文", "非表示", "本文(続き1)", "本文(続き2)"] }
 };
-var LIMIT = { nick: 30, point: 600, title: 60, body: 100000, name: 30 };
+var LIMIT = { nick: 30, point: 600, title: 60, body: 30000, name: 30 };
 var CHUNK = 40000;           // スプレッドシートの1セルは5万文字まで。長い本文は4万文字ずつ「本文」「本文(続き1)」「本文(続き2)」に分けて保存
 var URL_OK = /^https:\/\/claude\.ai\/(?:code\/)?artifact\/[A-Za-z0-9_-]+\/?$/;
 var MAX_RES = 1000;          // 1スレッドの上限

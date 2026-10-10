@@ -503,7 +503,7 @@ function bdNewForm(){
   m.innerHTML = '<form id="thForm" novalidate><h2 style="margin-bottom:4px">新しいスレを立てる</h2>' +
   '<label for="tName">名前(空欄なら名無しさん)</label><input id="tName" type="text" maxlength="30" autocomplete="off">' +
   '<label for="tTitle">スレのタイトル</label><input id="tTitle" type="text" maxlength="60" autocomplete="off">' +
-  '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="100000" data-count="tBodyCnt"></textarea><p class="hint"><span class="cnt" id="tBodyCnt">0 / 100,000 字</span>YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
+  '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="30000" data-count="tBodyCnt"></textarea><p class="hint"><span class="cnt" id="tBodyCnt">0 / 30,000 字</span>YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
   hpField("tHp") +
   '<p class="err" id="tErr" role="alert"></p><p><button class="btn" type="submit" id="tBtn">スレを立てる</button> <button class="btn ghost" type="button" id="tCancel">やめる</button></p></form>';
   if(window.matchMedia("(max-width:760px)").matches) m.scrollIntoView({block:"start", behavior:"smooth"});
@@ -513,7 +513,7 @@ function bdNewForm(){
     e.preventDefault();
     var name = $("#tName").value.trim(), t = $("#tTitle").value.trim(), b = $("#tBody").value.trim(), err = $("#tErr"), btn = $("#tBtn");
     if(!t || !b){ err.textContent = "タイトルと最初の書き込みを入れてください。"; return; }
-    if(b.length > MAX_BODY){ err.textContent = "本文は 100,000 字までです。"; return; }
+    if(b.length > MAX_BODY){ err.textContent = "本文は 30,000 字までです。"; return; }
     err.textContent = "";
     if(SDEMO){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
     btn.disabled = true; btn.textContent = "送信中…";
@@ -540,7 +540,7 @@ function fillThreads(list){
 }
 
 /* 書き込みの表示: 文字はすべて文字として出す。YouTube だけは動画 ID を取り出して、こちらで作った再生枠を出す */
-var MAX_EMBED = 3, MAX_BODY = 100000, CLIP_PX = 360;
+var MAX_EMBED = 3, MAX_BODY = 30000, CLIP_PX = 360;
 /* 長い書き込みは折りたたむ(「全て表示」「一部を表示」で切り替え) */
 function clipLong(box){
   Array.prototype.forEach.call(box.querySelectorAll(".res .rb"), function(rb){
@@ -562,7 +562,7 @@ function clipLong(box){
 document.addEventListener("input", function(e){
   var t = e.target, id = t && t.getAttribute && t.getAttribute("data-count");
   if(!id) return; var c = document.getElementById(id);
-  if(c){ c.textContent = t.value.length.toLocaleString("ja-JP") + " / 100,000 字"; c.classList.toggle("over", t.value.length >= MAX_BODY); }
+  if(c){ c.textContent = t.value.length.toLocaleString("ja-JP") + " / 30,000 字"; c.classList.toggle("over", t.value.length >= MAX_BODY); }
 });
 function ytId(u){
   var x; try{ x = new URL(u); }catch(e){ return null; }
@@ -626,7 +626,7 @@ function fillThread(d, n, jump){
   html += full ? '<div class="card dim" style="margin-top:16px">このスレッドは書き込みの上限(1000)に達しました。新しいスレッドを立ててください。</div>'
     : '<form id="rpForm" class="card" style="margin-top:18px" novalidate>' +
       '<label for="rName">名前(空欄なら名無しさん)</label><input id="rName" type="text" maxlength="30" autocomplete="off">' +
-      '<label for="rBody">書き込む内容</label><textarea id="rBody" maxlength="100000" data-count="rBodyCnt" placeholder="&gt;&gt;1 のように書くと、そのレスへの返信になります"></textarea><p class="hint"><span class="cnt" id="rBodyCnt">0 / 100,000 字</span>YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
+      '<label for="rBody">書き込む内容</label><textarea id="rBody" maxlength="30000" data-count="rBodyCnt" placeholder="&gt;&gt;1 のように書くと、そのレスへの返信になります"></textarea><p class="hint"><span class="cnt" id="rBodyCnt">0 / 30,000 字</span>YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
       hpField("rHp") +
       '<p class="err" id="rErr" role="alert"></p><button class="btn" type="submit" id="rBtn">書き込む</button></form>';
   box.innerHTML = html;
@@ -636,7 +636,7 @@ function fillThread(d, n, jump){
     e.preventDefault();
     var name = $("#rName").value.trim(), b = $("#rBody").value.trim(), err = $("#rErr"), btn = $("#rBtn");
     if(!b){ err.textContent = "書き込む内容を入れてください。"; return; }
-    if(b.length > MAX_BODY){ err.textContent = "本文は 100,000 字までです。"; return; }
+    if(b.length > MAX_BODY){ err.textContent = "本文は 30,000 字までです。"; return; }
     err.textContent = "";
     if(SDEMO){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
     btn.disabled = true; btn.textContent = "送信中…";
