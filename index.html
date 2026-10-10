@@ -212,10 +212,11 @@ function vOfficial(){
 
 /* ---------- 2. パーソナライズ ---------- */
 var PROMPTS = [
-  "添付の HTML ファイルを、アーティファクトとして公開して。内容はまず変えないで。",
+  "添付の HTML ファイルを、アーティファクトとして公開して。内容はまず変えないで。このページは Claude を呼び出すので、公開するときに capabilities で sample を宣言して({sample:{}})。",
   "辞書に出る例文を、5個から10個に増やして。",
   "画面の文字を大きくして、背景を暗い色にして。"
 ];
+var FIX_PROMPT = "このアーティファクトに capabilities の sample を宣言して({sample:{}})、公開し直して。内容は変えないで。";
 function vPersonalize(){
   var h = back() + '<h1>思い通りにパーソナライズ</h1><p class="lead">公式版のファイルを保存して、自分の Claude に「こう変えて」と頼みます。作り変えたものは、あなただけの“英語は友達”になります。</p>' +
   '<ol class="steps">' +
@@ -223,6 +224,9 @@ function vPersonalize(){
   '<li><div><h3>claude.ai を開いて、ファイルを添付する</h3><p>claude.ai の新しい会話に、保存したファイルを添付します。アーティファクトが使えるプランが必要です。</p></div></li>' +
   '<li><div><h3>Claude に頼む</h3><p>まず、そのままアーティファクトにしてもらうと安心です。そのあと、変えたいことを伝えます。例を使えます。</p>' +
   PROMPTS.map(function(t,i){ return '<div class="prompt"><span id="pr'+i+'">'+esc(t)+'</span><button class="btn ghost sm" type="button" data-copy="pr'+i+'">コピー</button></div>'; }).join("") +
+  '<div class="notice warn" style="margin-top:10px"><b>「検索できません」「原因コード: null」と出たら、</b>Claude を呼び出す機能が付かずに公開されています。同じ会話で、次のように頼んでください。' +
+  '<div class="prompt"><span id="prFix">'+esc(FIX_PROMPT)+'</span><button class="btn ghost sm" type="button" data-copy="prFix">コピー</button></div>' +
+  '公開し直したら、claude.ai 上でアーティファクトを開き、Claude の利用を確認する表示が出たら許可します。</div>' +
   '</div></li>' +
   '<li><div><h3>共有の設定を変える</h3><p>他の人にも見せたいときは、アーティファクトの共有を「リンクを知っている人は見られる」にします。</p></div></li>' +
   '<li><div><h3>みんなに紹介する</h3><p>できたら、メニューの「編集版を投稿」から紹介できます。</p><a class="btn ghost sm" href="#post" data-nav="post">編集版を投稿へ</a></div></li>' +
