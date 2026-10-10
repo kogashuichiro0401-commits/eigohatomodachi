@@ -163,7 +163,8 @@ var CONFIG = {
   owner: "kogashuichiro0401-commits",          // GitHub のユーザー名
   repo: "eigohatomodachi",             // リポジトリ名
   officialUrl: "https://claude.ai/artifact/MbNT15yHh4HMQqDqvuyCta", // 公式版のアーティファクト(いまの画面では使っていません)
-  formspreeId: "xyekjzko"         // Formspree のフォームID(例: xyzabcde)
+  formspreeId: "xyekjzko",        // Formspree のフォームID(例: xyzabcde)
+  gasUrl: ""                      // 掲示板と編集版の保存先(Apps Script のウェブアプリ URL …/exec)。空のあいだは見本表示
 };
 /* ===================================== */
 
@@ -171,7 +172,6 @@ var $ = function(s, el){ return (el||document).querySelector(s); };
 var view = $("#view");
 var DEMO = CONFIG.owner === "YOUR_GITHUB_NAME" || CONFIG.repo === "YOUR_REPO_NAME";
 var API = "https://api.github.com/repos/" + encodeURIComponent(CONFIG.owner) + "/" + encodeURIComponent(CONFIG.repo);
-var WEB = "https://github.com/" + encodeURIComponent(CONFIG.owner) + "/" + encodeURIComponent(CONFIG.repo);
 var URL_OK = /^https:\/\/claude\.ai\/(?:code\/)?artifact\/[A-Za-z0-9_-]+\/?$/;
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -206,18 +206,61 @@ var D_REL = [
   {name:"英語は友達 v1.0", tag_name:"v1.0", published_at:"2026-09-12T03:00:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:120}]}
 ];
 var D_SUB = [
-  {number:3, created_at:"2026-10-09T10:20:00Z", body:"### ニックネーム\n\nみかん\n\n### 改善ポイント\n\n例文を10個に増やして、語源の欄を短くしました。\n\n### URL\n\nhttps://claude.ai/artifact/sample-mikan"},
-  {number:2, created_at:"2026-10-05T01:05:00Z", body:"### ニックネーム\n\nたろう\n\n### 改善ポイント\n\n画面を濃い色にして、文字を大きくしました。\n\n### URL\n\nhttps://claude.ai/artifact/sample-taro"}
+  {id:2, at:"2026-10-09T10:20:00Z", nick:"みかん", point:"例文を10個に増やして、語源の欄を短くしました。", url:"https://claude.ai/artifact/sample-mikan"},
+  {id:1, at:"2026-10-05T01:05:00Z", nick:"たろう", point:"画面を濃い色にして、文字を大きくしました。", url:"https://claude.ai/artifact/sample-taro"}
 ];
 var D_THREADS = [
-  {number:5, title:"【雑談】みんなの英語の勉強法", body:"勉強法を教えてください。\n“英語は友達”はどんな時に使ってますか?", created_at:"2026-10-08T01:00:00Z", updated_at:"2026-10-09T12:30:00Z", comments:2, user:{login:"sample-user1"}},
-  {number:4, title:"例文が多すぎる時の直し方", body:"辞書の例文を5個に戻したいです。", created_at:"2026-10-06T08:00:00Z", updated_at:"2026-10-06T10:00:00Z", comments:1, user:{login:"sample-user2"}}
+  {id:2, title:"【雑談】みんなの英語の勉強法", created:"2026-10-08T01:00:00Z", updated:"2026-10-09T12:30:00Z", count:3},
+  {id:1, title:"例文が多すぎる時の直し方", created:"2026-10-06T08:00:00Z", updated:"2026-10-06T10:00:00Z", count:2}
 ];
-var D_COMM = {
-  5:[{id:1, user:{login:"sample-user2"}, created_at:"2026-10-08T03:00:00Z", body:"通学中に、音読モードで使ってます。"},
-     {id:2, user:{login:"sample-user3"}, created_at:"2026-10-09T12:30:00Z", body:">>1 同じです!単語帳もよく使います。"}],
-  4:[{id:3, user:{login:"sample-user1"}, created_at:"2026-10-06T10:00:00Z", body:"プロンプトに「例文は5個」と書けば戻りました。"}]
+var D_POSTS = {
+  2:[{no:1, at:"2026-10-08T01:00:00Z", name:"名無しさん", uid:"a1B2c3D4", body:"勉強法を教えてください。\n“英語は友達”はどんな時に使ってますか?"},
+     {no:2, at:"2026-10-08T03:00:00Z", name:"みかん", uid:"Zx9Yw8Vu", body:"通学中に、音読モードで使ってます。"},
+     {no:3, at:"2026-10-09T12:30:00Z", name:"名無しさん", uid:"Qr5St6Uv", body:">>2 同じです!単語帳もよく使います。"}],
+  1:[{no:1, at:"2026-10-06T08:00:00Z", name:"たろう", uid:"Lm3No4Pq", body:"辞書の例文を5個に戻したいです。"},
+     {no:2, at:"2026-10-06T10:00:00Z", name:"名無しさん", uid:"a1B2c3D4", body:"「例文は5個にして」と頼めば戻りました。"}]
 };
+
+/* ---------- スプレッドシート(Apps Script)とのやりとり ---------- */
+var SDEMO = !CONFIG.gasUrl;
+function uid(){
+  var k = "eigo-uid", v = null;
+  try{ v = localStorage.getItem(k); }catch(e){}
+  if(!v || !/^[A-Za-z0-9]{16,64}$/.test(v)){
+    var a = new Uint8Array(16); crypto.getRandomValues(a);
+    v = Array.prototype.map.call(a, function(b){ return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".charAt(b % 62); }).join("");
+    try{ localStorage.setItem(k, v); }catch(e){}
+  }
+  return v;
+}
+async function sheetGet(q){
+  var r = await fetch(CONFIG.gasUrl + "?" + q + "&t=" + Date.now(), {cache:"no-store"});
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  var d = await r.json();
+  if(!d || !d.ok) throw Object.assign(new Error("api"), {code: d && d.error || "server"});
+  return d;
+}
+async function sheetPost(data){
+  data.uid = uid();
+  var r = await fetch(CONFIG.gasUrl, {method:"POST", body: JSON.stringify(data)});   // text/plain のまま送る(事前確認なし)
+  if(!r.ok) throw Object.assign(new Error("HTTP " + r.status), {code:"network"});
+  var d = await r.json();
+  if(!d || !d.ok) throw Object.assign(new Error("api"), {code: d && d.error || "server"});
+  return d;
+}
+function postErr(e){
+  switch(e && e.code){
+    case "rate_limited": return "続けて書き込むときは、30秒ほど空けてください。";
+    case "busy": return "書き込みが混み合っています。少し待ってから、もう一度お試しください。";
+    case "invalid_url": return "URL は https://claude.ai/artifact/… の形で入れてください。";
+    case "invalid": return "入力の長さを確かめてください。";
+    case "full": return "このスレッドは書き込みの上限(1000)に達しました。新しいスレッドを立ててください。";
+    case "not_found": return "このスレッドは見つかりません。";
+    default: return "送信できませんでした。少し時間をおいて、もう一度お試しください。";
+  }
+}
+function hpField(id){ return '<div class="hp" aria-hidden="true"><label for="'+id+'">ここは空のままにしてください</label><input id="'+id+'" type="text" tabindex="-1" autocomplete="off"></div>'; }
+var LOAD_ERR = '<div class="card dim">読み込めませんでした。少し時間をおいて、もう一度開いてください。</div>';
 
 /* ---------- 画面: ホーム ---------- */
 function vHome(){
@@ -309,90 +352,99 @@ function vUse(){
   return back() + '<h1>編集版“英語は友達”を利用する</h1><p class="lead">みんなが作り変えた“英語は友達”です。「開く」を押すと、その人の“英語は友達”が開きます。</p>' +
   '<div class="notice warn"><b>投稿は自動で載ります。</b>中身の安全性は保証できません。信用できるものだけ使ってください。</div><div id="sublist"><span class="dim">読み込み中…</span></div>';
 }
-function parseForm(body){
-  var out = {}, re = /###\s+(.+?)\s*\n+([\s\S]*?)(?=\n###\s|$)/g, m;
-  while((m = re.exec(String(body||"").replace(/\r/g,"")))) out[m[1].trim()] = m[2].trim();
-  return out;
-}
 async function loadSubs(){
-  if(DEMO) return D_SUB;
-  try{ return await gh("/issues?labels=submission&state=open&per_page=50"); }catch(e){ markDemo(); return D_SUB; }
+  if(SDEMO) return D_SUB;
+  try{ return (await sheetGet("a=subs")).items || []; }catch(e){ return "err"; }
 }
 function fillSubs(list){
   var box = $("#sublist"); if(!box) return;
-  var items = list.map(function(i){ var f = parseForm(i.body); return {n:i.number, at:i.created_at, nick:f["ニックネーム"], pt:f["改善ポイント"], url:f["URL"]}; })
-    .filter(function(x){ return x.nick && x.url && URL_OK.test(x.url); });
+  if(list === "err"){ box.innerHTML = LOAD_ERR; return; }
+  var items = list.filter(function(x){ return x.nick && x.url && URL_OK.test(x.url); });
   if(!items.length){ box.innerHTML = '<div class="card dim">まだ投稿がありません。最初の1人になりませんか?</div>'; return; }
   box.innerHTML = items.map(function(x){
     return '<article class="sub"><div class="head"><span class="nick">'+esc(x.nick)+'</span><span class="when">投稿日 '+esc(fmtDate(x.at))+'</span></div>' +
-      '<p class="pt">'+esc(x.pt||"")+'</p><div class="act"><a class="btn sm" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">開く</a></div></article>';
+      '<p class="pt">'+esc(x.point||"")+'</p><div class="act"><a class="btn sm" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">開く</a></div></article>';
   }).join("");
 }
 
 /* ---------- 3. 編集版“英語は友達”を投稿 ---------- */
 function vPost(){
-  return back() + '<h1>編集版“英語は友達”を投稿</h1><p class="lead">作り変えた“英語は友達”を、みんなに紹介します。紹介の送信には、GitHub のアカウントが必要です。</p>' +
+  return back() + '<h1>編集版“英語は友達”を投稿</h1><p class="lead">作り変えた“英語は友達”を、みんなに紹介します。アカウントの登録はいりません。</p>' +
   '<ol class="steps">' +
-  '<li><div><h3>GitHub のアカウントを用意する</h3><p>無料です。メールアドレスだけで作れます。持っている人は、次に進みます。</p>' +
-  '<p><a class="btn ghost sm" href="https://github.com/signup" target="_blank" rel="noopener noreferrer">アカウントを作る</a> <a class="btn ghost sm" href="https://github.com/login" target="_blank" rel="noopener noreferrer">ログインする</a></p>' +
-  '<p class="dim" style="font-size:.84rem">作成の流れ: メールアドレス → パスワード → ユーザー名 → 届いた確認コードを入力。ログインしたまま、次に進みます。</p></div></li>' +
   '<li><div><h3>アーティファクトの共有を確認する</h3><p>作り変えた“英語は友達”の共有を、「リンクを知っている人は見られる」にします。変えないと、他の人が開けません。</p></div></li>' +
-  '<li><div><h3>内容を入れる</h3>' +
+  '<li><div><h3>内容を入れて、送信する</h3>' +
   '<form id="postForm" novalidate>' +
   '<label for="pNick">ニックネーム</label><input id="pNick" type="text" maxlength="30" autocomplete="off">' +
   '<label for="pPoint">改善ポイント</label><textarea id="pPoint" maxlength="600" placeholder="どこをどう変えましたか?"></textarea>' +
   '<label for="pUrl">アーティファクトの URL</label><input id="pUrl" type="url" placeholder="https://claude.ai/artifact/..." autocomplete="off">' +
+  hpField("pHp") +
   '<p class="err" id="pErr" role="alert"></p>' +
   '<p class="dim" style="font-size:.84rem">投稿した内容は、誰でも見られる形で公開されます。個人情報は書かないでください。</p>' +
-  '<button class="btn" type="submit">GitHub の送信画面を開く</button></form></div></li>' +
-  '<li><div><h3>GitHub で「送信」を押す</h3><p>入力済みの画面が開きます。内容を確かめて、送信を押すと完了です。しばらくすると、「編集版“英語は友達”を利用する」の一覧に載ります。</p></div></li>' +
+  '<button class="btn" type="submit" id="pBtn">投稿する</button></form></div></li>' +
   '</ol>';
 }
 function bindPost(){
   var f = $("#postForm"); if(!f) return;
-  f.addEventListener("submit", function(e){
+  f.addEventListener("submit", async function(e){
     e.preventDefault();
-    var nick = $("#pNick").value.trim(), pt = $("#pPoint").value.trim(), url = $("#pUrl").value.trim(), err = $("#pErr");
+    var nick = $("#pNick").value.trim(), pt = $("#pPoint").value.trim(), url = $("#pUrl").value.trim(), err = $("#pErr"), btn = $("#pBtn");
     if(!nick){ err.textContent = "ニックネームを入れてください。"; return; }
     if(!pt){ err.textContent = "改善ポイントを入れてください。"; return; }
     if(!URL_OK.test(url)){ err.textContent = "URL は https://claude.ai/artifact/… の形で入れてください。"; return; }
     err.textContent = "";
-    if(DEMO){ err.textContent = "見本表示のため、GitHub は開きません。設定後に開くようになります。"; return; }
-    var q = "template=submission.yml&title=" + encodeURIComponent("[編集版] " + nick) + "&nickname=" + encodeURIComponent(nick) + "&point=" + encodeURIComponent(pt) + "&url=" + encodeURIComponent(url);
-    window.open(WEB + "/issues/new?" + q, "_blank", "noopener");
+    if(SDEMO){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
+    btn.disabled = true; btn.textContent = "送信中…";
+    try{
+      await sheetPost({action:"sub", nick:nick, point:pt, url:url, hp:$("#pHp").value});
+      f.innerHTML = '<p><b>投稿しました。</b>ありがとうございます。</p><p><a class="btn ghost sm" href="#use" data-nav="use">編集版“英語は友達”の一覧を見る</a></p>';
+    }catch(ex){
+      btn.disabled = false; btn.textContent = "投稿する"; err.textContent = postErr(ex);
+    }
   });
 }
 
 /* ---------- 掲示板(2ちゃんねる風) ---------- */
 function vBoard(){
   return back() + '<h1>掲示板</h1><p class="lead">利用者どうしで、自由に話す場所です。スレッドの一覧から、読みたい話題を選びます。</p>' +
-  '<div class="notice">書き込みには GitHub のアカウントが必要です(読むだけなら不要)。名前の欄には GitHub のユーザー名が出ます。</div>' +
-  '<p><button class="btn" type="button" id="newTh">新しいスレッドを立てる</button></p>' +
-  '<form id="thForm" class="card" hidden novalidate><label for="tTitle">スレッドのタイトル</label><input id="tTitle" type="text" maxlength="60"><label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea><p class="err" id="tErr" role="alert"></p><button class="btn" type="submit">GitHub の送信画面を開く</button></form>' +
+  '<div class="notice">アカウントの登録なしで書き込めます。名前は空欄なら「名無しさん」になります。ID は端末ごとに、1日ごとに変わります。</div>' +
+  '<p><button class="btn" type="button" id="newTh" aria-expanded="false" aria-controls="thForm">新しいスレッドを立てる</button></p>' +
+  '<form id="thForm" class="card" hidden novalidate>' +
+  '<label for="tName">名前(空欄なら名無しさん)</label><input id="tName" type="text" maxlength="30" autocomplete="off">' +
+  '<label for="tTitle">スレッドのタイトル</label><input id="tTitle" type="text" maxlength="60" autocomplete="off">' +
+  '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea>' +
+  hpField("tHp") +
+  '<p class="err" id="tErr" role="alert"></p><button class="btn" type="submit" id="tBtn">スレッドを立てる</button></form>' +
   '<div id="thlist"><span class="dim">読み込み中…</span></div>' +
   '<p class="rules">ルール: 他の人への中傷、個人情報、宣伝や迷惑な書き込みは、管理者が削除することがあります。</p>';
 }
 async function loadThreads(){
-  if(DEMO) return D_THREADS;
-  try{ return await gh("/issues?labels=board&state=open&sort=updated&direction=desc&per_page=50"); }catch(e){ markDemo(); return D_THREADS; }
+  if(SDEMO) return D_THREADS;
+  try{ return (await sheetGet("a=threads")).threads || []; }catch(e){ return "err"; }
 }
 function fillThreads(list){
   var box = $("#thlist"); if(!box) return;
-  if(!list.length){ box.innerHTML = '<div class="card dim">まだスレッドがありません。</div>'; return; }
+  if(list === "err"){ box.innerHTML = LOAD_ERR; return; }
+  if(!list.length){ box.innerHTML = '<div class="card dim">まだスレッドがありません。最初のスレッドを立ててみませんか?</div>'; return; }
   box.innerHTML = '<ul class="threads">' + list.map(function(t, i){
-    return '<li><a href="#board-'+t.number+'" data-nav="board-'+t.number+'">'+(i+1)+': '+esc(t.title)+' ('+((t.comments||0)+1)+')</a><span class="m">'+esc(fmtDate(t.updated_at, true))+'</span></li>';
+    return '<li><a href="#board-'+t.id+'" data-nav="board-'+t.id+'">'+(i+1)+': '+esc(t.title)+' ('+(t.count||0)+')</a><span class="m">'+esc(fmtDate(t.updated, true))+'</span></li>';
   }).join("") + '</ul>';
 }
 function bindBoard(){
   var nb = $("#newTh"), f = $("#thForm");
-  if(nb) nb.addEventListener("click", function(){ f.hidden = !f.hidden; });
-  if(f) f.addEventListener("submit", function(e){
+  if(nb) nb.addEventListener("click", function(){ f.hidden = !f.hidden; nb.setAttribute("aria-expanded", String(!f.hidden)); if(!f.hidden) $("#tTitle").focus(); });
+  if(f) f.addEventListener("submit", async function(e){
     e.preventDefault();
-    var t = $("#tTitle").value.trim(), b = $("#tBody").value.trim(), err = $("#tErr");
+    var name = $("#tName").value.trim(), t = $("#tTitle").value.trim(), b = $("#tBody").value.trim(), err = $("#tErr"), btn = $("#tBtn");
     if(!t || !b){ err.textContent = "タイトルと最初の書き込みを入れてください。"; return; }
     err.textContent = "";
-    if(DEMO){ err.textContent = "見本表示のため、GitHub は開きません。"; return; }
-    window.open(WEB + "/issues/new?template=board.yml&title=" + encodeURIComponent(t) + "&message=" + encodeURIComponent(b), "_blank", "noopener");
+    if(SDEMO){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
+    btn.disabled = true; btn.textContent = "送信中…";
+    try{
+      var r = await sheetPost({action:"thread", name:name, title:t, body:b, hp:$("#tHp").value});
+      if(r.id) location.hash = "board-" + r.id; else route();
+    }catch(ex){
+      btn.disabled = false; btn.textContent = "スレッドを立てる"; err.textContent = postErr(ex);
+    }
   });
 }
 function resBody(text){
@@ -402,35 +454,48 @@ function vThread(n){
   return '<a class="back" href="#board" data-nav="board">‹ スレッド一覧にもどる</a><div id="thread"><span class="dim">読み込み中…</span></div>';
 }
 async function loadThread(n){
-  if(DEMO){
-    var t = D_THREADS.filter(function(x){ return x.number === n; })[0];
-    if(!t) return null;
-    return {issue:t, comments:D_COMM[n] || []};
+  if(SDEMO){
+    var t = D_THREADS.filter(function(x){ return x.id === n; })[0];
+    return t ? {thread:t, posts:D_POSTS[n] || []} : null;
   }
-  try{
-    var is = await gh("/issues/" + n);
-    if(!is.labels || !is.labels.some(function(l){ return l.name === "board"; })) return null;
-    var cs = is.comments ? await gh("/issues/" + n + "/comments?per_page=100") : [];
-    return {issue:is, comments:cs};
-  }catch(e){ return "err"; }
+  try{ return await sheetGet("a=thread&id=" + n); }
+  catch(e){ return e.code === "not_found" ? null : "err"; }
 }
-function fillThread(d, n){
+function fillThread(d, n, jump){
   var box = $("#thread"); if(!box) return;
-  if(d === "err"){ box.innerHTML = '<div class="card dim">読み込めませんでした。少し時間をおいて、もう一度開いてください。</div>'; return; }
+  if(d === "err"){ box.innerHTML = LOAD_ERR; return; }
   if(!d){ box.innerHTML = '<div class="card dim">このスレッドは見つかりません。</div>'; return; }
-  var all = [{user:d.issue.user, created_at:d.issue.created_at, body:d.issue.body}].concat(d.comments);
-  function id(u){ var s = u && u.login || "?"; var h = 0; for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return h.toString(36).slice(-6); }
-  var html = '<h2 class="tt">'+esc(d.issue.title)+'</h2>';
-  all.forEach(function(r, i){
-    var raw = String(r.body || "");
-    var m = i === 0 ? parseForm(raw) : null;
-    var text = (m && m["本文"]) ? m["本文"] : raw;
-    html += '<div class="res" id="res-'+(i+1)+'"><div class="rh"><span class="n">'+(i+1)+'</span> 名前: <span class="nm">'+esc(r.user && r.user.login || "名無しさん")+'</span> : '+esc(fmtDate(r.created_at, true))+' ID:'+esc(id(r.user))+'</div><div class="rb">'+resBody(text)+'</div></div>';
+  var html = '<h2 class="tt">'+esc(d.thread.title)+'</h2>';
+  d.posts.forEach(function(r){
+    html += '<div class="res" id="res-'+r.no+'">' + (r.deleted
+      ? '<div class="rh"><span class="n">'+r.no+'</span> 名前: <span class="nm">あぼーん</span></div><div class="rb dim">このレスは削除されました</div>'
+      : '<div class="rh"><span class="n">'+r.no+'</span> 名前: <span class="nm">'+esc(r.name || "名無しさん")+'</span> : '+esc(fmtDate(r.at, true))+' ID:'+esc(r.uid || "???")+'</div><div class="rb">'+resBody(r.body)+'</div>') +
+      '</div>';
   });
-  var link = DEMO ? "" : WEB + "/issues/" + n;
-  html += '<p style="margin-top:16px">' + (link ? '<a class="btn" href="'+esc(link)+'#issue-comment-box" target="_blank" rel="noopener noreferrer">GitHub で返信を書く</a>' : '<span class="dim">(見本表示のため、返信ボタンは設定後に出ます)</span>') + '</p>' +
-    '<p class="dim" style="font-size:.84rem">返信は GitHub の画面で書きます(GitHub のアカウントが必要です)。書いたあと、このページを開き直すと反映されます。</p>';
+  var full = (d.thread.count || d.posts.length) >= 1000;
+  html += full ? '<div class="card dim" style="margin-top:16px">このスレッドは書き込みの上限(1000)に達しました。新しいスレッドを立ててください。</div>'
+    : '<form id="rpForm" class="card" style="margin-top:18px" novalidate>' +
+      '<label for="rName">名前(空欄なら名無しさん)</label><input id="rName" type="text" maxlength="30" autocomplete="off">' +
+      '<label for="rBody">書き込む内容</label><textarea id="rBody" maxlength="1500" placeholder="&gt;&gt;1 のように書くと、そのレスへの返信になります"></textarea>' +
+      hpField("rHp") +
+      '<p class="err" id="rErr" role="alert"></p><button class="btn" type="submit" id="rBtn">書き込む</button></form>';
   box.innerHTML = html;
+  var f = $("#rpForm");
+  if(f) f.addEventListener("submit", async function(e){
+    e.preventDefault();
+    var name = $("#rName").value.trim(), b = $("#rBody").value.trim(), err = $("#rErr"), btn = $("#rBtn");
+    if(!b){ err.textContent = "書き込む内容を入れてください。"; return; }
+    err.textContent = "";
+    if(SDEMO){ err.textContent = "見本表示のため、送信できません。設定後に使えます。"; return; }
+    btn.disabled = true; btn.textContent = "送信中…";
+    try{
+      var r = await sheetPost({action:"reply", id:n, name:name, body:b, hp:$("#rHp").value});
+      fillThread(await loadThread(n), n, r.no);
+    }catch(ex){
+      btn.disabled = false; btn.textContent = "書き込む"; err.textContent = postErr(ex);
+    }
+  });
+  if(jump){ var t = document.getElementById("res-" + jump); if(t){ t.scrollIntoView({block:"center"}); t.classList.add("hit"); setTimeout(function(){ t.classList.remove("hit"); }, 1600); } }
 }
 
 /* ---------- フィードバック ---------- */
@@ -473,7 +538,7 @@ function markDemo(){ DEMO = true; $("#demoTag").hidden = false; }
 async function route(){
   var h = (location.hash || "#home").slice(1) || "home";
   var m = /^board-(\d{1,6})$/.exec(h);
-  if(DEMO) $("#demoTag").hidden = false;
+  if(DEMO || SDEMO) $("#demoTag").hidden = false;
   if(m){ view.innerHTML = vThread(+m[1]); window.scrollTo(0,0); fillThread(await loadThread(+m[1]), +m[1]); return; }
   switch(h){
     case "intro": view.innerHTML = vIntro(); break;
