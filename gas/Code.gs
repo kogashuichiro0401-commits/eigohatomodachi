@@ -14,9 +14,10 @@
 var SHEETS = {
   sub:    { name: "編集版",   head: ["ID", "日時", "ニックネーム", "改善ポイント", "URL", "非表示"] },
   thread: { name: "スレッド", head: ["スレッドID", "作成日時", "更新日時", "タイトル", "レス数", "非表示"] },
-  post:   { name: "書き込み", head: ["スレッドID", "番号", "日時", "名前", "ID", "本文", "非表示"] }
+  post:   { name: "書き込み", head: ["スレッドID", "番号", "日時", "名前", "ID", "本文", "非表示", "本文(続き1)", "本文(続き2)"] }
 };
-var LIMIT = { nick: 30, point: 600, title: 60, body: 1500, name: 30 };
+var LIMIT = { nick: 30, point: 600, title: 60, body: 100000, name: 30 };
+var CHUNK = 40000;           // スプレッドシートの1セルは5万文字まで。長い本文は4万文字ずつ「本文」「本文(続き1)」「本文(続き2)」に分けて保存
 var URL_OK = /^https:\/\/claude\.ai\/(?:code\/)?artifact\/[A-Za-z0-9_-]+\/?$/;
 var MAX_RES = 1000;          // 1スレッドの上限
 var WAIT_SEC = 30;           // 同じ人の連続書き込みの間隔
@@ -36,6 +37,10 @@ function sheet_(k) {
     sh = ss.insertSheet(d.name);
     sh.getRange(1, 1, 1, d.head.length).setValues([d.head]).setFontWeight("bold");
     sh.setFrozenRows(1);
+  } else if (sh.getLastColumn() < d.head.length) {
+    // 列が増えたとき(本文の続きの列など)、見出しを足す
+    var have = sh.getLastColumn();
+    sh.getRange(1, have + 1, 1, d.head.length - have).setValues([d.head.slice(have)]).setFontWeight("bold");
   }
   return sh;
 }
@@ -89,7 +94,7 @@ function getThread_(id) {
     .map(function (r) {
       var p = { no: Number(r[1]), at: iso_(r[2]) };
       if (hidden_(r[6])) p.deleted = true;
-      else { p.name = String(r[3]) || NONAME; p.uid = String(r[4]); p.body = String(r[5]); }
+      else { p.name = String(r[3]) || NONAME; p.uid = String(r[4]); p.body = String(r[5]) + String(r[7] || "") + String(r[8] || ""); }
       return p;
     })
     .sort(function (a, b) { return a.no - b.no; });
@@ -187,7 +192,24 @@ function dailyId_(uid) {
 function append_(k, row) {
   var sh = sheet_(k);
   sh.appendRow(row);
-  sh.getRange(sh.getLastRow(), row.length).insertCheckboxes();
+  sh.getRange(sh.getLastRow(), SHEETS[k].head.indexOf("非表示") + 1).insertCheckboxes();
+}
+
+// 本文を CHUNK 文字ずつに分ける(絵文字などの2文字ぶんの文字は、途中で切らない)
+function split_(s) {
+  var out = [];
+  while (s.length > CHUNK) {
+    var cut = CHUNK, c = s.charCodeAt(cut - 1);
+    if (c >= 0xD800 && c <= 0xDBFF) cut--;
+    out.push(s.slice(0, cut)); s = s.slice(cut);
+  }
+  out.push(s);
+  while (out.length < 3) out.push("");
+  return out;
+}
+function postRow_(id, no, now, d, uid) {
+  var b = split_(str_(d.body));
+  return [id, no, now, txt_(str_(d.name) || NONAME), dailyId_(uid), txt_(b[0]), false, b[1] ? txt_(b[1]) : "", b[2] ? txt_(b[2]) : ""];
 }
 
 function addSub_(d) {
@@ -199,7 +221,7 @@ function addSub_(d) {
 function addThread_(d, uid) {
   var id = nextId_("thread"), now = new Date();
   append_("thread", [id, now, now, txt_(str_(d.title)), 1, false]);
-  append_("post", [id, 1, now, txt_(str_(d.name) || NONAME), dailyId_(uid), txt_(str_(d.body)), false]);
+  append_("post", postRow_(id, 1, now, d, uid));
   return { ok: true, id: id, no: 1 };
 }
 
@@ -211,7 +233,7 @@ function addReply_(d, uid) {
   var sh = sheet_("thread");
   sh.getRange(t.row, 3).setValue(now);
   sh.getRange(t.row, 5).setValue(no);
-  append_("post", [id, no, now, txt_(str_(d.name) || NONAME), dailyId_(uid), txt_(str_(d.body)), false]);
+  append_("post", postRow_(id, no, now, d, uid));
   return { ok: true, id: id, no: no };
 }
 
