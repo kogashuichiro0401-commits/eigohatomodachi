@@ -1,5 +1,5 @@
 name: 編集版の投稿
-description: 英語は友達の編集版(アーティファクトのリンク)を投稿します
+description: “英語は友達”の編集版(アーティファクトのリンク)を投稿します
 title: "[編集版] "
 labels: ["submission"]
 body:
