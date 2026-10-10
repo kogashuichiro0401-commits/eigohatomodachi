@@ -179,6 +179,9 @@ textarea{min-height:120px;resize:vertical}
 .res .rb{margin:6px 0 0 1.4em;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
 .res .rb a{color:var(--accent)}
 .res.hit{background:var(--accent-soft)}
+.res .yt{display:block;width:100%;max-width:560px;aspect-ratio:16/9;margin:8px 0;border-radius:8px;overflow:hidden;background:#000}
+.res .yt iframe{display:block;width:100%;height:100%;border:0}
+.hint{font-size:.8rem;color:var(--muted);margin:4px 0 0}
 .rules{font-size:.84rem;color:var(--muted)}
 </style>
 
@@ -495,7 +498,7 @@ function bdNewForm(){
   m.innerHTML = '<form id="thForm" novalidate><h2 style="margin-bottom:4px">新しいスレを立てる</h2>' +
   '<label for="tName">名前(空欄なら名無しさん)</label><input id="tName" type="text" maxlength="30" autocomplete="off">' +
   '<label for="tTitle">スレのタイトル</label><input id="tTitle" type="text" maxlength="60" autocomplete="off">' +
-  '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea>' +
+  '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea><p class="hint">YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
   hpField("tHp") +
   '<p class="err" id="tErr" role="alert"></p><p><button class="btn" type="submit" id="tBtn">スレを立てる</button> <button class="btn ghost" type="button" id="tCancel">やめる</button></p></form>';
   if(window.matchMedia("(max-width:760px)").matches) m.scrollIntoView({block:"start", behavior:"smooth"});
@@ -530,8 +533,46 @@ function fillThreads(list){
   markCur();
 }
 
+/* 書き込みの表示: 文字はすべて文字として出す。YouTube だけは動画 ID を取り出して、こちらで作った再生枠を出す */
+var MAX_EMBED = 3;
+function ytId(u){
+  var x; try{ x = new URL(u); }catch(e){ return null; }
+  if(x.protocol !== "https:" && x.protocol !== "http:") return null;
+  var h = x.hostname.replace(/^(www|m|music)\./, ""), id = null, m;
+  if(h === "youtu.be") id = x.pathname.slice(1).split("/")[0];
+  else if(h === "youtube.com" || h === "youtube-nocookie.com"){
+    if(x.pathname === "/watch") id = x.searchParams.get("v");
+    else if((m = /^\/(?:embed|shorts|live|v)\/([^/?#]+)/.exec(x.pathname))) id = m[1];
+  }
+  if(!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+  var t = x.searchParams.get("start") || x.searchParams.get("t") || "", sec = 0;
+  if(/^\d+$/.test(t)) sec = +t;
+  else if((m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(t)) && t) sec = (+m[1]||0)*3600 + (+m[2]||0)*60 + (+m[3]||0);
+  return {id:id, start:sec};
+}
+function ytEmbed(v){
+  return '<span class="yt"><iframe src="https://www.youtube-nocookie.com/embed/'+v.id+(v.start ? '?start='+v.start : '')+'" title="YouTube 動画" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></span>';
+}
+function plain(t){ return esc(t).replace(/&gt;&gt;(\d{1,4})/g, '<a href="#" data-res="$1">&gt;&gt;$1</a>'); }
 function resBody(text){
-  return esc(text).replace(/&gt;&gt;(\d{1,4})/g, '<a href="#" data-res="$1">&gt;&gt;$1</a>');
+  var src = String(text || ""), out = "", last = 0, n = 0, m;
+  // 1) <iframe ... src="..."></iframe>  2) http(s) の URL
+  var re = /<iframe\b[^>]*?\bsrc\s*=\s*["']([^"']+)["'][^>]*>(?:\s*<\/iframe>)?|https?:\/\/[A-Za-z0-9\-._~:\/?#\[\]@!$&()*+,;=%]+/gi;
+  while((m = re.exec(src))){
+    var whole = m[0], url = m[1] || whole, tail = "";
+    if(!m[1]){ var tr = /[.,!?;:)\]]+$/.exec(url); if(tr){ tail = tr[0]; url = url.slice(0, -tail.length); } }
+    var v = ytId(url), html;
+    if(v && n < MAX_EMBED){ n++; html = ytEmbed(v); }
+    else if(m[1]){ html = null; }                       // YouTube 以外の iframe は、ただの文字として出す
+    else { html = '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer nofollow ugc">'+esc(url)+'</a>'; }
+    if(html === null) continue;
+    var before = src.slice(last, m.index);
+    if(html.indexOf('class="yt"') > 0) before = before.replace(/\n$/, "");
+    out += plain(before) + html + esc(tail);
+    last = m.index + whole.length;
+    if(html.indexOf('class="yt"') > 0 && src.charAt(last) === "\n") last++;
+  }
+  return out + plain(src.slice(last));
 }
 async function loadThread(n){
   if(SDEMO){
@@ -556,7 +597,7 @@ function fillThread(d, n, jump){
   html += full ? '<div class="card dim" style="margin-top:16px">このスレッドは書き込みの上限(1000)に達しました。新しいスレッドを立ててください。</div>'
     : '<form id="rpForm" class="card" style="margin-top:18px" novalidate>' +
       '<label for="rName">名前(空欄なら名無しさん)</label><input id="rName" type="text" maxlength="30" autocomplete="off">' +
-      '<label for="rBody">書き込む内容</label><textarea id="rBody" maxlength="1500" placeholder="&gt;&gt;1 のように書くと、そのレスへの返信になります"></textarea>' +
+      '<label for="rBody">書き込む内容</label><textarea id="rBody" maxlength="1500" placeholder="&gt;&gt;1 のように書くと、そのレスへの返信になります"></textarea><p class="hint">YouTube のリンクや埋め込みコードを貼ると、動画がそのまま表示されます。</p>' +
       hpField("rHp") +
       '<p class="err" id="rErr" role="alert"></p><button class="btn" type="submit" id="rBtn">書き込む</button></form>';
   box.innerHTML = html;
