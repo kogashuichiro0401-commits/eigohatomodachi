@@ -27,7 +27,7 @@
   --accent:#73B9AC; --accent-soft:#1D3330; --warn:#E3A86B; --warn-soft:#33281C; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ja);font-size:15px;line-height:1.75}
-.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:28px 120px}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:28px 60px}
 header.top{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:22px}
 .brand{font-size:1.35rem;font-weight:700;letter-spacing:.04em;text-decoration:none;color:var(--ink)}
 .brand span{font-weight:500;font-size:.85rem;color:var(--muted);margin-left:8px;letter-spacing:.08em}
@@ -140,26 +140,31 @@ textarea{min-height:120px;resize:vertical}
 .sub .pt{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .sub .act{margin-top:4px}
 
-/* board dock (always at the bottom) */
-.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;pointer-events:none}
-.dk-bar,.dk-panel,.dk-shade{pointer-events:auto}
-.dk-bar{max-width:820px;margin:0 auto 10px;width:calc(100% - 24px);display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 10px;box-shadow:0 6px 24px rgba(23,33,42,.14)}
-.dk-open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:4px;text-align:left;color:var(--ink)}
-.dk-lab{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--accent);white-space:nowrap}
-.dk-latest{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.86rem;color:var(--muted)}
-.dk-new{white-space:nowrap}
-.dk-shade{position:fixed;inset:0;background:rgba(10,16,20,.35)}
-.dk-panel{position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:820px;height:min(82vh,760px);background:var(--bg);border:1px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(10,16,20,.2)}
-.dk-head{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.dk-head b{text-align:center;grid-column:2;grid-row:1}
-.dk-back,.dk-x{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 8px;font-size:.9rem;min-width:44px}
-.dk-x{font-size:1.4rem;line-height:1;justify-self:end;grid-column:3;grid-row:1}
-.dk-back{grid-column:1;grid-row:1}
-.dk-body{flex:1;overflow-y:auto;padding:14px 16px 24px;overscroll-behavior:contain}
-.threads button{all:unset;cursor:pointer;font-weight:700;color:var(--accent);overflow-wrap:anywhere}
-.threads button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-body.dk-on{overflow:hidden}
-.dk-panel[hidden],.dk-shade[hidden]{display:none}
+/* board on home (left 7: thread / right 3: new + list) */
+.bd{position:relative;left:50%;transform:translateX(-50%);width:min(1240px,calc(100vw - 32px));margin-top:30px;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);gap:16px;align-items:start}
+.bd-main,.bd-side{background:var(--surface);border:1px solid var(--line);border-radius:12px;height:clamp(520px,76vh,860px);display:flex;flex-direction:column;min-width:0}
+.bd-main{overflow-y:auto;padding:16px 20px 22px;scroll-margin-top:12px}
+.bd-side{padding:14px 14px 10px;gap:10px}
+.bd-lab{font-size:.78rem;letter-spacing:.12em;color:var(--muted);font-weight:700;margin:0}
+.bd-new{width:100%}
+.bd-list{flex:1;overflow-y:auto;margin:0 -6px;padding:0 6px}
+.bd-list .threads{border-top:0}
+.bd-list .threads li{display:block;padding:0;border-bottom:1px solid var(--line)}
+.bd-list .threads button{display:block;width:100%;box-sizing:border-box;padding:9px 8px;border-radius:6px;cursor:pointer;color:var(--ink)}
+.bd-list .threads button:hover{background:var(--accent-soft)}
+.bd-list .threads button[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.bd-list .tl{display:block;font-weight:700;overflow-wrap:anywhere;line-height:1.45}
+.bd-list .tl .c{color:var(--accent);font-weight:700;margin-left:4px}
+.bd-list .tm{display:block;font-family:var(--f-mono);font-size:.72rem;color:var(--muted);margin-top:2px}
+.bd-side .rules{margin:0;font-size:.76rem;line-height:1.6}
+.threads button{all:unset}
+.threads button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+@media (max-width:760px){
+  .bd{grid-template-columns:1fr;left:auto;transform:none;width:auto}
+  .bd-side{order:-1;height:auto;max-height:none}
+  .bd-list{max-height:46vh}
+  .bd-main{height:auto;max-height:none;overflow:visible}
+}
 
 /* board (2ch style) */
 .threads{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
@@ -186,24 +191,6 @@ body.dk-on{overflow:hidden}
   <main id="view" aria-live="polite"></main>
 </div>
 
-<div class="dock" id="dock">
-  <div class="dk-shade" id="dkShade" hidden></div>
-  <section class="dk-panel" id="dkPanel" aria-labelledby="dkTitle" hidden>
-    <div class="dk-head">
-      <button class="dk-back" type="button" id="dkBack" hidden>‹ スレ一覧</button>
-      <b id="dkTitle">掲示板</b>
-      <button class="dk-x" type="button" id="dkClose" aria-label="掲示板を閉じる">×</button>
-    </div>
-    <div class="dk-body" id="dkBody"></div>
-  </section>
-  <div class="dk-bar">
-    <button class="dk-open" type="button" id="dkOpen" aria-expanded="false" aria-controls="dkPanel">
-      <span class="dk-lab"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 5h13v9H7l-4 4zM8 17h9l4 4V9h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>掲示板</span>
-      <span class="dk-latest" id="dkLatest">スレを見る</span>
-    </button>
-    <button class="btn sm dk-new" type="button" id="dkNew">＋ スレを立てる</button>
-  </div>
-</div>
 
 <script>
 (function(){
@@ -319,8 +306,15 @@ function vHome(){
   menuRow("start","1","“英語は友達”を利用する","公式版を保存して、自分の Claude で使います。話しかけるだけで、自分専用に作り変えられます") +
   menuRow("use","2","編集版“英語は友達”を利用する","みんなが作り変えた“英語は友達”を、使ってみます") +
   menuRow("post","3","編集版“英語は友達”を投稿","作り変えた“英語は友達”を、みんなに紹介します") +
-  '</ul>';
+  '</ul>' +
+  '<section class="bd" id="board" aria-label="掲示板">' +
+  '<div class="bd-main" id="bdMain"><span class="dim">読み込み中…</span></div>' +
+  '<aside class="bd-side"><p class="bd-lab">掲示板</p>' +
+  '<button class="btn bd-new" type="button" id="bdNew">＋ スレを立てる</button>' +
+  '<div class="bd-list" id="thlist"><span class="dim">読み込み中…</span></div>' +
+  RULES + '</aside></section>';
 }
+function bindHome(){ var b = $("#bdNew"); if(b) b.addEventListener("click", bdNewForm); }
 function menuRow(id,no,t,d){ return '<li><a href="#'+id+'" data-nav="'+id+'"><span class="no">'+no+'</span><span><span class="t">'+t+'</span><span class="d">'+d+'</span></span><span class="go" aria-hidden="true">›</span></a></li>'; }
 function back(){ return '<a class="back" href="#home" data-nav="home">‹ メニューにもどる</a>'; }
 
@@ -464,36 +458,49 @@ function bindPost(){
   });
 }
 
-/* ---------- 掲示板(2ちゃんねる風・画面の下に常駐) ---------- */
-var dk = {panel:$("#dkPanel"), shade:$("#dkShade"), body:$("#dkBody"), back:$("#dkBack"), open:$("#dkOpen"), latest:$("#dkLatest")};
-var RULES = '<p class="rules">ルール: 他の人への中傷、個人情報、宣伝や迷惑な書き込みは、管理者が削除することがあります。名前は空欄なら「名無しさん」、ID は端末ごとに1日ごとに変わります。</p>';
-function dkShow(state){
-  dk.panel.hidden = false; dk.shade.hidden = false; dk.open.setAttribute("aria-expanded","true"); document.body.classList.add("dk-on");
-  dk.back.hidden = state === "list";
-  dk.body.scrollTop = 0;
-  if(state === "list") dkList();
-  else if(state === "new") dkNewForm();
-  else dkThread(state);
-}
-function dkHide(){
-  dk.panel.hidden = true; dk.shade.hidden = true; dk.open.setAttribute("aria-expanded","false"); document.body.classList.remove("dk-on");
-  if(/^#board/.test(location.hash)) history.replaceState(null, "", "#home");
-  dk.open.focus();
-}
-async function dkList(){
-  dk.body.innerHTML = '<p><button class="btn" type="button" data-dk="new">＋ 新しいスレを立てる</button></p><div id="thlist"><span class="dim">読み込み中…</span></div>' + RULES;
+/* ---------- 掲示板(2ちゃんねる風・トップの下半分) ---------- */
+var RULES = '<p class="rules">ルール: 中傷、個人情報、宣伝や迷惑な書き込みは、管理者が削除することがあります。名前は空欄なら「名無しさん」、ID は端末ごとに1日ごとに変わります。</p>';
+var BD = {cur:null, list:[]};
+async function initBoard(want, scroll){
   var list = await loadThreads(true);
-  fillThreads(list); dkTeaser(list);
+  BD.list = list === "err" ? [] : list;
+  fillThreads(list);
+  if(list === "err"){ $("#bdMain") && ($("#bdMain").innerHTML = LOAD_ERR); return; }
+  var id = want && BD.list.some(function(t){ return t.id === want; }) ? want : busiest();
+  if(id) showThread(id, scroll); else bdEmpty();
 }
-function dkNewForm(){
-  dk.back.hidden = false;
-  dk.body.innerHTML = '<form id="thForm" class="card" novalidate><h2 style="margin-bottom:4px">新しいスレを立てる</h2>' +
+function busiest(){
+  var best = null;
+  BD.list.forEach(function(t){ if(!best || (t.count||0) > (best.count||0) || ((t.count||0) === (best.count||0) && t.updated > best.updated)) best = t; });
+  return best && best.id;
+}
+function bdEmpty(){
+  var m = $("#bdMain"); if(!m) return;
+  m.innerHTML = '<div class="card dim" style="margin:auto 0">まだスレがありません。右の「＋ スレを立てる」から、最初のスレを立ててみませんか?</div>';
+}
+function markCur(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-th]"), function(b){ b.setAttribute("aria-current", String(+b.getAttribute("data-th") === BD.cur)); });
+}
+async function showThread(n, scroll){
+  var m = $("#bdMain"); if(!m) return;
+  BD.cur = n; markCur();
+  m.innerHTML = '<div id="thread"><span class="dim">読み込み中…</span></div>'; m.scrollTop = 0;
+  if(scroll) m.scrollIntoView({block:"start", behavior:"smooth"});
+  fillThread(await loadThread(n), n);
+}
+function bdNewForm(){
+  var m = $("#bdMain"); if(!m) return;
+  BD.cur = null; markCur();
+  m.scrollTop = 0;
+  m.innerHTML = '<form id="thForm" novalidate><h2 style="margin-bottom:4px">新しいスレを立てる</h2>' +
   '<label for="tName">名前(空欄なら名無しさん)</label><input id="tName" type="text" maxlength="30" autocomplete="off">' +
   '<label for="tTitle">スレのタイトル</label><input id="tTitle" type="text" maxlength="60" autocomplete="off">' +
   '<label for="tBody">最初の書き込み</label><textarea id="tBody" maxlength="1500"></textarea>' +
   hpField("tHp") +
-  '<p class="err" id="tErr" role="alert"></p><button class="btn" type="submit" id="tBtn">スレを立てる</button></form>' + RULES;
-  setTimeout(function(){ var t = $("#tTitle"); if(t) t.focus(); }, 50);
+  '<p class="err" id="tErr" role="alert"></p><p><button class="btn" type="submit" id="tBtn">スレを立てる</button> <button class="btn ghost" type="button" id="tCancel">やめる</button></p></form>';
+  if(window.matchMedia("(max-width:760px)").matches) m.scrollIntoView({block:"start", behavior:"smooth"});
+  setTimeout(function(){ var t = $("#tTitle"); if(t) t.focus({preventScroll:true}); }, 50);
+  $("#tCancel").addEventListener("click", function(){ var id = busiest(); if(id) showThread(id); else bdEmpty(); });
   $("#thForm").addEventListener("submit", async function(e){
     e.preventDefault();
     var name = $("#tName").value.trim(), t = $("#tTitle").value.trim(), b = $("#tBody").value.trim(), err = $("#tErr"), btn = $("#tBtn");
@@ -503,42 +510,25 @@ function dkNewForm(){
     btn.disabled = true; btn.textContent = "送信中…";
     try{
       var r = await sheetPost({action:"thread", name:name, title:t, body:b, hp:$("#tHp").value});
-      THC = null; dkShow(r.id); loadThreads(true).then(dkTeaser);
+      initBoard(r.id);
     }catch(ex){
       btn.disabled = false; btn.textContent = "スレを立てる"; err.textContent = postErr(ex);
     }
   });
 }
-async function dkThread(n){
-  dk.body.innerHTML = '<div id="thread"><span class="dim">読み込み中…</span></div>';
-  fillThread(await loadThread(n), n);
-}
-function dkTeaser(list){
-  if(!dk.latest) return;
-  if(list === "err" || !list || !list.length){ dk.latest.textContent = list === "err" ? "スレを見る" : "まだスレがありません"; return; }
-  dk.latest.textContent = "最新: " + list[0].title + " (" + (list[0].count||0) + ")";
-}
-var THC = null;   // スレ一覧の短いキャッシュ(20秒)
-async function loadThreads(fresh){
+async function loadThreads(){
   if(SDEMO) return D_THREADS;
-  if(!fresh && THC && Date.now() - THC.t < 20000) return THC.d;
-  try{ var d = (await sheetGet("a=threads")).threads || []; THC = {t:Date.now(), d:d}; return d; }catch(e){ return "err"; }
+  try{ return (await sheetGet("a=threads")).threads || []; }catch(e){ return "err"; }
 }
 function fillThreads(list){
   var box = $("#thlist"); if(!box) return;
-  if(list === "err"){ box.innerHTML = LOAD_ERR; return; }
-  if(!list.length){ box.innerHTML = '<div class="card dim">まだスレがありません。最初のスレを立ててみませんか?</div>'; return; }
-  box.innerHTML = '<ul class="threads">' + list.map(function(t, i){
-    return '<li><button type="button" data-dkth="'+t.id+'">'+(i+1)+': '+esc(t.title)+' ('+(t.count||0)+')</button><span class="m">'+esc(fmtDate(t.updated, true))+'</span></li>';
+  if(list === "err"){ box.innerHTML = '<p class="dim" style="font-size:.86rem">読み込めませんでした。</p>'; return; }
+  if(!list.length){ box.innerHTML = '<p class="dim" style="font-size:.86rem">まだスレがありません。</p>'; return; }
+  box.innerHTML = '<ul class="threads">' + list.map(function(t){
+    return '<li><button type="button" data-th="'+t.id+'" aria-current="false"><span class="tl">'+esc(t.title)+'<span class="c">('+(t.count||0)+')</span></span><span class="tm">'+esc(fmtDate(t.updated, true))+'</span></button></li>';
   }).join("") + '</ul>';
+  markCur();
 }
-dk.open.addEventListener("click", function(){ if(dk.panel.hidden) dkShow("list"); else dkHide(); });
-$("#dkNew").addEventListener("click", function(){ dkShow("new"); });
-$("#dkClose").addEventListener("click", dkHide);
-dk.shade.addEventListener("click", dkHide);
-dk.back.addEventListener("click", function(){ dkShow("list"); });
-document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !dk.panel.hidden) dkHide(); });
-loadThreads().then(dkTeaser);
 
 function resBody(text){
   return esc(text).replace(/&gt;&gt;(\d{1,4})/g, '<a href="#" data-res="$1">&gt;&gt;$1</a>');
@@ -581,6 +571,7 @@ function fillThread(d, n, jump){
     try{
       var r = await sheetPost({action:"reply", id:n, name:name, body:b, hp:$("#rHp").value});
       fillThread(await loadThread(n), n, r.no);
+      loadThreads().then(function(l){ if(l !== "err"){ BD.list = l; fillThreads(l); } });
     }catch(ex){
       btn.disabled = false; btn.textContent = "書き込む"; err.textContent = postErr(ex);
     }
@@ -629,8 +620,7 @@ async function route(){
   var h = (location.hash || "#home").slice(1) || "home";
   var m = /^board-(\d{1,6})$/.exec(h);
   if(DEMO || SDEMO) $("#demoTag").hidden = false;
-  if(!m && h !== "board" && !dk.panel.hidden){ dk.panel.hidden = true; dk.shade.hidden = true; dk.open.setAttribute("aria-expanded","false"); document.body.classList.remove("dk-on"); }
-  if(m || h === "board"){ view.innerHTML = vHome(); window.scrollTo(0,0); dkShow(m ? +m[1] : "list"); return; }
+  if(m || h === "board"){ view.innerHTML = vHome(); bindHome(); initBoard(m ? +m[1] : null, true); return; }
   switch(h){
     case "intro": view.innerHTML = vIntro(); break;
     case "start": case "personalize": case "official":
@@ -638,17 +628,15 @@ async function route(){
     case "use": view.innerHTML = vUse(); window.scrollTo(0,0); fillSubs(await loadSubs()); return;
     case "post": view.innerHTML = vPost(); bindPost(); break;
     case "feedback": view.innerHTML = vFeedback(); bindFeedback(); break;
-    default: view.innerHTML = vHome();
+    default: view.innerHTML = vHome(); bindHome(); initBoard(null); window.scrollTo(0,0); return;
   }
   window.scrollTo(0,0);
 }
 document.addEventListener("click", function(e){
   var c = e.target.closest("[data-copy]");
   if(c){ var el = document.getElementById(c.getAttribute("data-copy")); if(el) copyText(el.textContent, c); return; }
-  var th = e.target.closest("[data-dkth]");
-  if(th){ dkShow(+th.getAttribute("data-dkth")); return; }
-  var dn = e.target.closest("[data-dk]");
-  if(dn){ dkShow(dn.getAttribute("data-dk")); return; }
+  var th = e.target.closest("[data-th]");
+  if(th){ showThread(+th.getAttribute("data-th"), window.matchMedia("(max-width:760px)").matches); return; }
   var r = e.target.closest("[data-res]");
   if(r){ e.preventDefault(); var t = document.getElementById("res-" + r.getAttribute("data-res")); if(t){ t.scrollIntoView({block:"center"}); t.classList.add("hit"); setTimeout(function(){ t.classList.remove("hit"); }, 1600); } return; }
   var a = e.target.closest("[data-nav]");
