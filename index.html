@@ -214,8 +214,6 @@ textarea{min-height:120px;resize:vertical}
 "use strict";
 /* ===== 設定: ここだけ書き換えます ===== */
 var CONFIG = {
-  owner: "kogashuichiro0401-commits",          // GitHub のユーザー名
-  repo: "eigohatomodachi",             // リポジトリ名
   officialUrl: "https://claude.ai/artifact/MbNT15yHh4HMQqDqvuyCta", // 公式版のアーティファクト(「“英語は友達”を利用する」ボタンのリンク先)
   formspreeId: "xyekjzko",        // Formspree のフォームID(例: xyzabcde)
   gasUrl: "https://script.google.com/macros/s/AKfycbzNUzHE0gz2fMnaZ7jG2vkdW-Dx9UdhaCIVqZcjmhtDjNjLfgtxRtRHNv3BYGNK4VaEYw/exec"                      // 掲示板と編集版の保存先(Apps Script のウェブアプリ URL …/exec)。空のあいだは見本表示
@@ -224,8 +222,6 @@ var CONFIG = {
 
 var $ = function(s, el){ return (el||document).querySelector(s); };
 var view = $("#view");
-var DEMO = CONFIG.owner === "YOUR_GITHUB_NAME" || CONFIG.repo === "YOUR_REPO_NAME";
-var API = "https://api.github.com/repos/" + encodeURIComponent(CONFIG.owner) + "/" + encodeURIComponent(CONFIG.repo);
 var URL_OK = /^https:\/\/claude\.ai\/(?:code\/)?artifact\/[A-Za-z0-9_-]+\/?$/;
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -242,23 +238,8 @@ function copyText(t, btn){
   try{ navigator.clipboard.writeText(t).then(done, function(){ btn.textContent = "選択してコピー"; }); }catch(e){ btn.textContent = "選択してコピー"; }
 }
 
-/* ---------- GitHub からの読み取り(5分キャッシュ) ---------- */
-async function gh(path){
-  var key = "eitomo:" + path;
-  try{ var c = JSON.parse(sessionStorage.getItem(key)); if(c && Date.now() - c.t < 300000) return c.d; }catch(e){}
-  var r = await fetch(API + path, {headers:{"Accept":"application/vnd.github+json"}});
-  if(!r.ok) throw new Error("HTTP " + r.status);
-  var d = await r.json();
-  try{ sessionStorage.setItem(key, JSON.stringify({t:Date.now(), d:d})); }catch(e){}
-  return d;
-}
 
 /* ---------- 見本データ(設定前や、接続できないとき) ---------- */
-var D_REL = [
-  {name:"英語は友達 v1.2", tag_name:"v1.2", published_at:"2026-10-09T12:00:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:41}]},
-  {name:"英語は友達 v1.1", tag_name:"v1.1", published_at:"2026-09-28T09:30:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:73}]},
-  {name:"英語は友達 v1.0", tag_name:"v1.0", published_at:"2026-09-12T03:00:00Z", assets:[{name:"eitomo.html", browser_download_url:"#", download_count:120}]}
-];
 var D_SUB = [
   {id:2, at:"2026-10-09T10:20:00Z", nick:"みかん", point:"例文を10個に増やして、語源の欄を短くしました。", url:"https://claude.ai/artifact/sample-mikan"},
   {id:1, at:"2026-10-05T01:05:00Z", nick:"たろう", point:"画面を濃い色にして、文字を大きくしました。", url:"https://claude.ai/artifact/sample-taro"}
@@ -408,24 +389,6 @@ function vStart(){
   }).join("") + '</ol>' +
   '<div class="notice">検索のときに Claude の利用を確認する表示が出たら、「許可」を押してください。検索や翻訳のたびに、あなたの Claude の利用枠を使います。</div>' +
   '<div class="notice">複製した“英語は友達”は、あなたにしか見えません。新しい公式版を使いたくなったら、上のボタンからもう一度複製します。作り変えたものをみんなに紹介したいときは、<a href="#post" data-nav="post">編集版“英語は友達”を投稿</a>から。</div>';
-}
-async function loadReleases(){
-  if(DEMO) return D_REL;
-  try{ return await gh("/releases?per_page=30"); }catch(e){ markDemo(); return D_REL; }
-}
-function relFile(r){ var a = (r.assets||[]).filter(function(x){ return /\.html?$/i.test(x.name); })[0] || (r.assets||[])[0]; return a; }
-function fillPersonalize(rels){
-  var box = $("#dlbox"); if(!box) return;
-  var list = rels.filter(function(r){ return relFile(r); });
-  if(!list.length){ box.innerHTML = '<span class="dim">公開されている版が、まだありません。</span>'; return; }
-  var l = list[0], f = relFile(l);
-  box.innerHTML = '<div class="dl"><div class="meta"><div class="v">'+esc(l.name || l.tag_name)+'</div><div class="when">公開日 '+esc(fmtDate(l.published_at))+' ・ ダウンロード '+esc(f.download_count||0)+' 回</div></div>' +
-    '<a class="btn" href="'+esc(f.browser_download_url)+'" rel="noopener">最新版を保存する</a></div>' +
-    (list.length > 1 ? '<p style="margin:12px 0 0"><button class="btn ghost sm" type="button" id="oldBtn" aria-expanded="false">過去のバージョンを見る</button></p><div id="oldBox" class="vwrap" hidden><table class="vers"><thead><tr><th>版</th><th>公開日</th><th></th></tr></thead><tbody>' +
-      list.slice(1).map(function(r){ var ff = relFile(r); return '<tr><td>'+esc(r.name||r.tag_name)+'</td><td>'+esc(fmtDate(r.published_at))+'</td><td><a href="'+esc(ff.browser_download_url)+'" rel="noopener">保存</a></td></tr>'; }).join("") +
-      '</tbody></table></div>' : '');
-  var ob = $("#oldBtn");
-  if(ob) ob.addEventListener("click", function(){ var b = $("#oldBox"); b.hidden = !b.hidden; ob.setAttribute("aria-expanded", String(!b.hidden)); ob.textContent = b.hidden ? "過去のバージョンを見る" : "過去のバージョンを閉じる"; });
 }
 
 /* ---------- 2. 編集版“英語は友達”を利用する ---------- */
@@ -705,11 +668,10 @@ function bindFeedback(){
 }
 
 /* ---------- ルーティング ---------- */
-function markDemo(){ DEMO = true; $("#demoTag").hidden = false; }
 async function route(){
   var h = (location.hash || "#home").slice(1) || "home";
   var m = /^board-(\d{1,6})$/.exec(h);
-  if(DEMO || SDEMO) $("#demoTag").hidden = false;
+  if(SDEMO) $("#demoTag").hidden = false;
   if(m || h === "board"){ view.innerHTML = vHome(); bindHome(); initBoard(m ? +m[1] : null, true); return; }
   switch(h){
     case "intro": view.innerHTML = vIntro(); break;
